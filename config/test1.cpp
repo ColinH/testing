@@ -78,10 +78,7 @@ namespace tao
          std::string k;
       };
 
-      struct pointer
-      {
-         std::vector< token > p;
-      };
+      using pointer = std::vector< token >;
 
       namespace internal
       {
@@ -169,6 +166,8 @@ namespace tao
                   throw "something";
             }
          }
+
+         // PHASE ONE
 
          namespace rules
          {
@@ -301,21 +300,19 @@ namespace tao
             std::vector< pointer > keys;
          };
 
-         const value* resolve_for_copy( value* v, const pointer& p, const std::size_t b = 0, const bool throws = true )
+         const value* resolve_for_get( const value* v, const pointer& p, const std::size_t b = 0, const bool throws = true )
          {
             assert( v );
 
-            for( std::size_t i = b; i < p.p.size(); ++i ) {
-               const auto& k = p.p[ i ];
+            for( std::size_t i = b; i < p.size(); ++i ) {
+               const auto& k = p[ i ];
                switch( v->kind ) {
                   case node_kind::NORMAL:
                      switch( k.t ) {
                         case token::type::KEY:
-                           std::cerr << "TRACE " << __LINE__ << " " << k.k << std::endl;
                            v = &v->get_object().at( k.k );
                            break;
                         case token::type::INDEX:
-                           std::cerr << "TRACE " << __LINE__ << " " << k.i << std::endl;
                            v = &v->get_array().at( k.i );
                            break;
                         case token::type::APPEND:
@@ -324,7 +321,7 @@ namespace tao
                      break;
                   case node_kind::ADDITION:
                      for( auto j = v->get_array().rbegin(); j != v->get_array().rend(); ++j ) {
-                        if( auto* w = resolve_for_copy( &*j, p, i, false ) ) {
+                        if( auto* w = resolve_for_get( &*j, p, i, false ) ) {
                            return w;
                         }
                      }
@@ -342,23 +339,21 @@ namespace tao
             return v;
          }
 
-         value* resolve_for_insert_or_update( value* v, const pointer& p, const std::size_t b = 0, const bool throws = true )
+         value* resolve_for_set( value* v, const pointer& p, const std::size_t b = 0, const bool throws = true )
          {
             assert( v );
 
-            for( std::size_t i = b; i < p.p.size(); ++i ) {
-               const auto& k = p.p[ i ];
+            for( std::size_t i = b; i < p.size(); ++i ) {
+               const auto& k = p[ i ];
                switch( v->kind ) {
                   case node_kind::NORMAL:
                      switch( k.t ) {
                         case token::type::KEY:
                            v->prepare_object();
-                           std::cerr << "TRACE " << __LINE__ << " " << k.k << std::endl;
                            v = &v->unsafe_get_object()[ k.k ];
                            break;
                         case token::type::INDEX:
                            v->prepare_array();
-                           std::cerr << "TRACE " << __LINE__ << " " << k.i << std::endl;
                            v = &v->get_array().at( k.i );
                            break;
                         case token::type::APPEND: {
@@ -371,7 +366,7 @@ namespace tao
                      break;
                   case node_kind::ADDITION:
                      for( auto j = v->get_array().rbegin(); j != v->get_array().rend(); ++j ) {
-                        if( auto *w = resolve_for_insert_or_update( &*j, p, i, false ) ) {
+                        if( auto *w = resolve_for_set( &*j, p, i, false ) ) {
                            return w;
                         }
                      }
@@ -444,7 +439,7 @@ namespace tao
                   assert( !st.keys.empty() );
                   assert( !st.stack.empty() );
 
-                  auto& t = *resolve_for_insert_or_update( st.stack.back(), st.keys.back() );
+                  auto& t = *resolve_for_set( st.stack.back(), st.keys.back() );
                   t = T{ 0 };
                   st.stack.emplace_back( &t );
 
@@ -465,14 +460,6 @@ namespace tao
                begin_container< json::empty_array_t >( st );
                st.stack.back()->kind = node_kind::ADDITION;
             }
-
-            template< typename Input >
-            static void failure( const Input&, state& )
-            {
-               assert( false );
-            }
-
-            // TODO: Cleanup on failure? Probably there'll be enough must<> to not backtrack.
          };
 
          template< typename Rule >
@@ -559,10 +546,10 @@ namespace tao
             {
                if( st.temp.type() != json::type::DISCARDED ) {
                   assert( !st.keys.empty() );
-                  assert( !st.keys.back().p.empty() );
+                  assert( !st.keys.back().empty() );
                   assert( !st.stack.empty() );
 
-                  *resolve_for_insert_or_update( st.stack.back(), st.keys.back() ) = std::move( st.temp );
+                  *resolve_for_set( st.stack.back(), st.keys.back() ) = std::move( st.temp );
 
                   st.temp.discard();
                   st.keys.pop_back();
@@ -651,7 +638,7 @@ namespace tao
             {
                assert( !st.keys.empty() );
 
-               st.keys.back().p.push_back( token( in.string() ) );
+               st.keys.back().push_back( token( in.string() ) );
             }
          };
 
@@ -663,7 +650,7 @@ namespace tao
             {
                assert( !st.keys.empty() );
 
-               st.keys.back().p.push_back( token( in.string() ) );
+               st.keys.back().push_back( token( in.string() ) );
             }
          };
 
@@ -686,7 +673,7 @@ namespace tao
             {
                assert( !st.keys.empty() );
 
-               st.keys.back().p.push_back( token() );
+               st.keys.back().push_back( token() );
             }
          };
 
@@ -698,7 +685,7 @@ namespace tao
             {
                assert( !st.keys.empty() );
 
-               st.keys.back().p.push_back( token( std::stoul( in.string() ) ) );
+               st.keys.back().push_back( token( std::stoul( in.string() ) ) );
             }
          };
 
@@ -722,11 +709,86 @@ namespace tao
                assert( !st.keys.empty() );
                assert( !st.stack.empty() );
 
-               st.temp = *resolve_for_copy( st.stack.front(), st.keys.back() );
+               st.temp = *resolve_for_get( st.stack.front(), st.keys.back() );
 
                st.keys.pop_back();
             }
          };
+
+         // PHASE TWO
+
+         void resolve_references( const value& r, value& v );
+
+         void resolve_references_normal( const value& r, value& v )
+         {
+            switch( v.type() ) {
+               case json::type::ARRAY:
+                  for( auto& i : v.get_array() ) {
+                     resolve_references( r, i );
+                  }
+                  break;
+               case json::type::OBJECT:
+                  for( auto& i : v.get_object() ) {
+                     resolve_references( r, i.second );
+                  }
+                  break;
+               default:
+                  break;
+            }
+         }
+
+         pointer vector_to_pointer( const std::vector< value >& v )
+         {
+            pointer result;
+
+            for( const auto& i : v ) {
+               assert( i.kind == node_kind::NORMAL );
+
+               if( i.is_string_type() ) {
+                  result.push_back( token( i.as< std::string >() ) );
+               }
+               else if( i.is_number() ) {
+                  result.push_back( token( i.as< std::size_t >() ) );
+               }
+               else {
+                  throw "we are not caring about sensible error messages just yet";
+               }
+            }
+            return result;
+         }
+
+         void resolve_references_reference( const value& r, value& v )
+         {
+            for( auto& i : v.get_array() ) {
+               resolve_references( r, i );
+            }
+            const auto p = vector_to_pointer( v.get_array() );
+            v = *resolve_for_get( &r, p );
+         }
+
+         void resolve_references( const value& r, value& v )
+         {
+            switch( v.kind ) {
+               case node_kind::NORMAL:
+                  resolve_references_normal( r, v );
+                  break;
+               case node_kind::ADDITION:
+                  resolve_references_normal( r, v );  // Additions are transparent to the reference resolving pass.
+                  break;
+               case node_kind::REFERENCE:
+                  resolve_references_reference( r, v );
+                  break;
+            }
+         }
+
+         void resolve_references( value& v )
+         {
+            resolve_references( v, v );
+         }
+
+         void resolve_additions( value& )
+         {
+         }
 
       }  // namespace internal
 
@@ -737,6 +799,8 @@ namespace tao
          pegtl::parse< internal::grammar, internal::action, internal::control >( in, st );
          assert( st.stack.size() == 1 );
          assert( st.stack.back() == &st.result );
+         internal::resolve_references( st.result );
+         internal::resolve_additions( st.result );
          return std::move( st.result );
       }
 
