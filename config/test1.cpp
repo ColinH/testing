@@ -742,7 +742,7 @@ namespace tao
             pointer result;
 
             for( const auto& i : v ) {
-               assert( i.kind == node_kind::NORMAL );
+               //               assert( i.kind == node_kind::NORMAL );
 
                if( i.is_string_type() ) {
                   result.push_back( token( i.as< std::string >() ) );
@@ -761,6 +761,7 @@ namespace tao
          {
             for( auto& i : v.get_array() ) {
                resolve_references( r, i );
+               //               assert( i.kind != node_kind::REFERENCE );
             }
             const auto p = vector_to_pointer( v.get_array() );
             v = *resolve_for_get( &r, p );
@@ -812,7 +813,7 @@ int main( int argc, char** argv )
 {
    for( int i = 1; i < argc; ++i ) {
       const auto v = tao::config::parse_file( argv[ i ] );
-      tao::json::to_stream( std::cout, v, 3 );
+      tao::json::jaxn::to_stream( std::cout, v, 3 );
       std::cout << std::endl;
    }
    return 0;

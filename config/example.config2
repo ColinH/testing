@@ -34,6 +34,6 @@ copied.array_test = %copy array.0
 
 number = 42
 
-reference = (a.(b.d).1.c)
+reference = (pond)
 
 zzz = 1 + 2 + 3
