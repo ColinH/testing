@@ -1,5 +1,4 @@
-// Copyright (c) 2018 Dr. Colin Hirsch and Daniel Frey
-// Please see LICENSE for license or visit https://github.com/taocpp/json/
+// Copyright (c) 2018 Dr. Colin Hirsch
 
 #include <functional>
 #include <iostream>
@@ -19,7 +18,6 @@ namespace tao
    {
       enum node_kind
       {
-         INVALID,
          NORMAL,
          ADDITION,
          REFERENCE
@@ -339,8 +337,6 @@ namespace tao
                         return nullptr;
                      }
                      throw "attempt to copy from within phase two reference";
-                  case node_kind::INVALID:
-                     assert( false );
                }
             }
             return v;
@@ -388,8 +384,6 @@ namespace tao
                         return nullptr;
                      }
                      throw "attempt to insert or update within phase two reference";
-                  case node_kind::INVALID:
-                     assert( false );
                }
             }
             return v;
