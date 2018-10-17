@@ -1,0 +1,39 @@
+%include "example.config3"
+
+foo.bar.baz = true
+
+foo.bar.fibble = false
+
+pond.frog = {
+   foo.bar.baz = null
+}
+
+fobble = [ true, true, false ]
+fibble = [ true true false ]
+
+array = [ [
+  { a : true, b : false }
+] ]
+
+include.file = {
+   %include "example.config3"
+}
+
+four = null
+
+fibble.1 = null
+fibble.- = null
+
+copied = {
+   again = %copy include
+}
+
+copied.subtree = %copy pond.frog
+
+copied.array_test = %copy array.0
+
+number = 42
+
+reference = (a.(b.d).1.c)
+
+zzz = 1 + 2 + 3

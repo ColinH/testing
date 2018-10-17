@@ -1,5 +1,5 @@
 # Testing
 
-For testing some github related things.
+For testing some things.
 
 ![image](black-1080p.png)
