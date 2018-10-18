@@ -130,7 +130,11 @@ namespace tao
          {
             static void apply0( state& st )
             {
-               begin_container< json::empty_array_t >( st );
+               assert( !st.stack.empty() );
+               assert( st.stack.back()->kind() );
+               assert( st.stack.back()->is_array() );
+
+               st.stack.emplace_back( &st.stack.back()->get_array().emplace_back( json::empty_array ) );
                st.stack.back()->set_kind( kind::REFERENCE );
             }
          };
@@ -175,8 +179,10 @@ namespace tao
             static void apply0( state& st )
             {
                if( st.temp.type() != json::type::DISCARDED ) {
+                  assert( !st.temp.kind() );
+                  assert( st.stack.size() > 1 );
+
                   resolve_and_pop_for_set( st ).emplace_back( std::move( st.temp ) );
-                  st.temp.discard();
                }
             }
          };
@@ -204,15 +210,11 @@ namespace tao
          template<>
          struct action< rules::element_comma >
          {
-            // This is a slightly strange anchor point, but we simply need to call
-            // this action after every element value(_list) has been parsed, and this
-            // rule fits the bill without having to introduce something for the body
-            // of the until<> in element_list.
-
             static void apply0( state& st )
             {
                if( st.temp.type() != json::type::DISCARDED ) {
-                  assert( st.stack.size() > 1 );  // TODO: Change to > 2 after implementing consistent addition arrays in resolve_for_set()?
+                  assert( !st.temp.kind() );
+                  assert( st.stack.size() > 1 );
 
                   st.stack.back()->emplace_back( std::move( st.temp ) );
                   st.temp.discard();
@@ -262,9 +264,14 @@ namespace tao
          {
             static void apply0( state& st )
             {
+               assert( !st.stack.empty() );
+               assert( st.stack.back()->kind() == kind::ADDITION );
+               assert( st.stack.back()->is_array() );
                assert( st.temp.type() == json::type::DISCARDED );
 
-               st.temp = resolve_and_pop_for_get( st );
+               auto& a = st.stack.back()->get_array();
+               const auto& v = resolve_and_pop_for_get( st ).get_array();
+               a.insert( a.end(), v.begin(), v.end() );
             }
          };
 

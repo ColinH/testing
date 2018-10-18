@@ -19,10 +19,12 @@ namespace tao
          struct state
          {
             state()
-               : result( json::empty_object )
             {
                temp.discard();
+               result.prepare_array();
                stack.emplace_back( &result );
+               result.set_kind( kind::ADDITION );
+               stack.emplace_back( &result.get_array().emplace_back( json::empty_object ) );
             }
 
             value temp;

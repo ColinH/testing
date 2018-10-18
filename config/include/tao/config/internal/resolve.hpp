@@ -10,6 +10,7 @@
 #include "pointer.hpp"
 #include "state.hpp"
 #include "token.hpp"
+#include "to_stream.hpp"  // TODO: Remove after debugging.
 #include "utility.hpp"
 #include "value.hpp"
 
@@ -19,104 +20,143 @@ namespace tao
    {
       namespace internal
       {
-         template< typename T >
-         void begin_container( state& st );
-
          // All resolve functions return a pointer to the array representing the value addition.
 
-         inline const value* resolve_for_get( const value* v, const pointer& p, std::size_t i, const bool throws )
+         inline value* array_find( value& v, const std::size_t i )
          {
-            assert( v );
-            assert( i < p.size() );
-            assert( v->kind() != kind::ADDITION );
-
-            if( v->kind() == kind::REFERENCE ) {
-               // if( !throws ) {
-               //    return nullptr;
-               // }
-               throw std::runtime_error( "resolve for get across phase two reference" );
-            }
-            switch( p[ i ].t ) {
-               case token::type::KEY:
-                  v = &v->get_object().at( p[ i ].k );
-                  break;
-               case token::type::INDEX:
-                  v = &v->get_array().at( p[ i ].i );
-                  break;
-               case token::type::APPEND:
-                  throw std::runtime_error( "resolve for get append" );
-            }
-            assert( v->kind() == kind::ADDITION );
-
-            if( i + 1 == p.size() ) {
-               return v;
-            }
-            for( auto j = v->get_array().rbegin(); j != v->get_array().rend(); ++j ) {
-               if( auto* w = resolve_for_get( &*j, p, i + 1, false ) ) {
-                  return w;
-               }
-            }
-            if( !throws ) {
-               return nullptr;
-            }
-            throw std::runtime_error( "resolve for get found nothing" );
+            auto& a = v.get_array();
+            return ( i < a.size() ) ? ( a.data() + i ) : nullptr;
          }
 
-         inline value* resolve_for_set( value* v, const pointer& p, std::size_t i, const bool throws )
+         inline const value* array_find( const value& v, const std::size_t i )
          {
-            assert( v );
-            assert( i < p.size() );
-            assert( v->kind() != kind::ADDITION );
+            const auto& a = v.get_array();
+            return ( i < a.size() ) ? ( a.data() + i ) : nullptr;
+         }
 
-            if( v->kind() == kind::REFERENCE ) {
-               throw std::runtime_error( "resolve for set across phase two reference" );
-            }
-            switch( p[ i ].t ) {
-               case token::type::KEY: {
-                  v->prepare_object();
-                  auto& o = v->unsafe_get_object();
-                  const auto j = o.emplace( p[ i ].k, json::empty_array );
-                  if( j.second ) {
-                     j.first->second.set_kind( kind::ADDITION );
-                  }
-                  else {
-                     assert( j.first->second.kind() == kind::ADDITION );  // TODO: Redundant with the assert() below; temporary.
-                  }
-                  v = &j.first->second;
-               }  break;
-               case token::type::INDEX:
-                  v->prepare_array();
-                  v = &v->get_array().at( p[ i ].i );
-                  break;
-               case token::type::APPEND: {
-                  v->prepare_array();
-                  auto& a = v->unsafe_get_array();
-                  v = &a.emplace_back( json::empty_array );
-                  v->set_kind( kind::ADDITION );
-               }  break;
-            }
-            assert( v->kind() == kind::ADDITION );
+         inline std::size_t array_size( const std::vector< value >& a, const std::size_t n )
+         {
+            std::size_t r = 0;
 
-            if( i + 1 == p.size() ) {
-               return v;
-            }
-            for( auto j = v->get_array().rbegin(); j != v->get_array().rend(); ++j ) {
-               if( auto *w = resolve_for_set( &*j, p, i + 1, false ) ) {
-                  return w;
+            for( std::size_t i = 0; i < n; ++i ) {
+               if( a[ i ].kind() ) {
+                  throw std::runtime_error( "resolve requires array size of phase two reference" );
                }
+               if( !a[ i ].is_array() ) {
+                  throw std::runtime_error( "resolve requires array size of non-array" );
+               }
+               r += a[ i ].unsafe_get_array().size();
             }
-            if( !throws ) {
+            return r;
+         }
+
+         inline const value* resolve_for_get( const value* const v, const pointer& p, const std::size_t i )
+         {
+            if( i > p.size() ) {
                return nullptr;
             }
-            auto& j = v->get_array().emplace_back();
-            return resolve_for_set( &j, p, i + 1, true );
+            assert( v );
+            assert( v->kind() == kind::ADDITION );
+
+            if( i == p.size() ) {
+               return v;
+            }
+            const auto& a = v->get_array();
+            const auto s = a.size();
+
+            for( std::size_t j = 0; j < s; ++j ) {
+               const value& w = a[ s - j - 1 ];
+
+               assert( w.kind() != kind::ADDITION );
+
+               if( w.kind() == kind::REFERENCE ) {
+                  throw std::runtime_error( "resolve for get across phase two reference" );
+               }
+               switch( p[ i ].t ) {
+                  case token::type::KEY:
+                     if ( auto *x = w.find( p[ i ].k ) ) {
+                        return resolve_for_get( x, p, i + 1 );
+                     }
+                     break;
+                  case token::type::INDEX:
+                     if ( auto *x = array_find( w, p[ i ].i - array_size( a, s - j - 1 ) ) ) {
+                        return resolve_for_get( x, p, i + 1 );
+                     }
+                     break;
+                  case token::type::APPEND:
+                     throw std::runtime_error( "resolve for get has append in key" );
+               }
+            }
+            return nullptr;
+         }
+
+         inline value* resolve_for_set( value* const v, const pointer& p, const std::size_t i )
+         {
+            if( i > p.size() ) {
+               return nullptr;
+            }
+            assert( v );
+            assert( v->kind() == kind::ADDITION );
+
+            if( i == p.size() ) {
+               return v;
+            }
+            auto& a = v->get_array();  // value_list
+
+            if( p[ i ].t == token::type::APPEND ) {
+               if( a.empty() ) {
+                  a.emplace_back( json::empty_array );  // array value
+               }
+               auto& b = a.back().get_array();
+               auto& c = b.emplace_back( json::empty_array );
+               c.set_kind( kind::ADDITION );
+               return resolve_for_set( &c, p, i + 1 );
+            }
+            const auto s = a.size();
+
+            for( std::size_t j = 0; j < s; ++j ) {
+               value& w = a[ s - j - 1 ];
+
+               assert( w.kind() != kind::ADDITION );
+
+               if( w.kind() == kind::REFERENCE ) {
+                  throw std::runtime_error( "resolve for get across phase two reference" );
+               }
+               switch( p[ i ].t ) {
+                  case token::type::KEY:
+                     if ( auto* x = w.find( p[ i ].k ) ) {
+                        return resolve_for_set( x, p, i + 1 );
+                     }
+                     break;
+                  case token::type::INDEX:
+                     if( auto* x = array_find( w, p[ i ].i - array_size( a, s - j - 1 ) ) ) {
+                        return resolve_for_set( x, p, i + 1 );
+                     }
+                     break;
+                  case token::type::APPEND:
+                     assert( false );  // Handled above.
+               }
+            }
+            if( p[ i ].t == token::type::INDEX ) {
+               throw std::runtime_error( "resolve for get index not found" );
+            }
+            if( a.empty() ) {
+               a.emplace_back( json::empty_object );  // object value
+            }
+            auto& b = a.back().get_object();
+            auto d = b.emplace( p[ i ].k, json::empty_array );
+            d.first->second.set_kind( kind::ADDITION );
+            return resolve_for_set( &d.first->second, p, i + 1 );
          }
 
          inline const value& resolve_for_get( const value& v, const pointer& p )
          {
             assert( !p.empty() );
 
-            return *resolve_for_get( &v, p, 0, true );
+            if( const auto* w = resolve_for_get( &v, p, 0 ) ) {
+               return *w;
+            }
+            throw std::runtime_error( "resolve for get failure" );
          }
 
          inline const value& resolve_and_pop_for_get( state& st )
@@ -125,27 +165,35 @@ namespace tao
             assert( !st.keys.empty() );
             assert( !st.keys.back().empty() );
 
-            const auto& r = resolve_for_get( *st.stack.back(), st.keys.back() );
-            st.keys.pop_back();
-            return r;
+            if( const auto* w = resolve_for_get( st.stack.front(), st.keys.back(), 0 ) ) {
+               st.keys.pop_back();
+               return *w;
+            }
+            throw std::runtime_error( "resolve and pop for get failure" );
          }
 
          inline value& resolve_for_set( value& v, const pointer& p )
          {
             assert( !p.empty() );
 
-            return *resolve_for_set( &v, p, 0, true );
+            if( auto* w = resolve_for_set( &v, p, 0 ) ) {
+               return *w;
+            }
+            throw std::runtime_error( "resolve for set failure" );
          }
 
          inline value& resolve_and_pop_for_set( state& st )
          {
-            assert( !st.stack.empty() );
+            assert( st.stack.size() > 1 );
+            assert( ( st.stack.size() & 1 ) == 0 );
             assert( !st.keys.empty() );
             assert( !st.keys.back().empty() );
 
-            auto& r = resolve_for_set( *st.stack.back(), st.keys.back() );
-            st.keys.pop_back();
-            return r;
+            if( auto* w = resolve_for_set( *( st.stack.end() - 2 ), st.keys.back(), 0 ) ) {
+               st.keys.pop_back();
+               return *w;
+            }
+            throw std::runtime_error( "these messages need a lot of improvement" );
          }
 
       }  // namespace internal

@@ -19,12 +19,12 @@ namespace tao
       inline internal::value parse_file( const std::string& filename )
       {
          internal::state st;
-         assert( st.stack.size() == 1 );
-         assert( st.stack.back() == &st.result );
+         assert( st.stack.size() == 2 );
+         assert( st.stack.front() == &st.result );
          json_pegtl::file_input in( filename );
          json_pegtl::parse< internal::grammar, internal::action, internal::control >( in, st );
-         assert( st.stack.size() == 1 );
-         assert( st.stack.back() == &st.result );
+         assert( st.stack.size() == 2 );
+         assert( st.stack.front() == &st.result );
          //         internal::handle_references( st.result );
          //         internal::handle_additions( st.result );
          return std::move( st.result );  // TODO: Change type of result from config::internal::value to config::value...

@@ -20,26 +20,11 @@ namespace tao
          template< typename T >
          void begin_container( state& st )
          {
-            switch( st.stack.back()->type() ) {
-               case json::type::ARRAY: {
-                  assert( !st.stack.empty() );
+            assert( !st.stack.empty() );
+            assert( st.stack.back()->kind() == kind::ADDITION );
+            assert( st.stack.back()->is_array() );
 
-                  auto& a = st.stack.back()->get_array();
-                  auto& t = a.emplace_back( T{ 0 } );
-                  st.stack.emplace_back( &t );
-               }  break;
-               case json::type::OBJECT:
-                  st.stack.emplace_back( &resolve_and_pop_for_set( st ) );
-                  break;
-               default:
-                  assert( false );
-            }
-         }
-
-         inline void begin_addition( state& st )
-         {
-            begin_container< json::empty_array_t >( st );
-            st.stack.back()->set_kind( kind::ADDITION );
+            st.stack.emplace_back( &st.stack.back()->get_array().emplace_back( T{ 0 } ) );
          }
 
          inline pointer array_to_pointer( const std::vector< value >& v )

@@ -16,4 +16,10 @@
 * position
 * pointer
 
+### State Stack
+* array
+* object
+* value_list
+* reference (nested)
+
 # Phase 2

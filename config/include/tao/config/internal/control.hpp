@@ -54,7 +54,20 @@ namespace tao
             template< typename Input >
             static void start( const Input&, state& st )
             {
-               begin_addition( st );
+               assert( !st.stack.empty() );
+               assert( !st.stack.back()->kind() );
+
+               switch( st.stack.back()->type() ) {
+                  case json::type::ARRAY:
+                     st.stack.emplace_back( &st.stack.back()->get_array().emplace_back( json::empty_array ) );
+                     break;
+                  case json::type::OBJECT:
+                     st.stack.emplace_back( &( resolve_and_pop_for_set( st ) = json::empty_array ) );
+                     break;
+                  default:
+                     assert( false );
+               }
+               st.stack.back()->set_kind( kind::ADDITION );
             }
          };
 
