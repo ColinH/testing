@@ -9,6 +9,7 @@
 #include "pointer.hpp"
 #include "state.hpp"
 #include "token.hpp"
+#include "utility.hpp"
 #include "value.hpp"
 
 namespace tao
@@ -17,6 +18,9 @@ namespace tao
    {
       namespace internal
       {
+         template< typename T >
+         void begin_container( state& st );
+
          inline const value* resolve_for_get( const value* v, const pointer& p, const std::size_t b, const bool throws )
          {
             assert( v );
@@ -76,7 +80,7 @@ namespace tao
                      case token::type::APPEND: {
                         v->prepare_array();
                         auto& a = v->unsafe_get_array();
-                        a.emplace_back( value() );
+                        a.emplace_back();
                         v = &a.back();  // TODO: Use begin_addition() here correctly.
                      }  break;
                   }

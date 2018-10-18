@@ -85,7 +85,7 @@ namespace tao
             struct value_plus : plus {};
             struct value_list : pegtl::list< value_part, value_plus, ws1 > {};
 
-            struct key_member : pegtl::if_must< member_key, wss, equals, wss, value_list, wss > {};  // TODO: plus_equals
+            struct key_member : pegtl::if_must< member_key, wss, equals, wss, value_list > {};  // TODO: plus_equals
 
             struct filename_content : pegtl::star< pegtl::not_one< '"' > > {};  // TODO: Escaping?
             struct include_filename : pegtl::if_must< quote_2, filename_content, quote_2 > {};
@@ -94,7 +94,7 @@ namespace tao
             struct include_member : pegtl::if_must< include_s, wsp, include_filename > {};
             struct at_member : pegtl::if_must< at, pegtl::sor< include_member, delete_member > > {};
 
-            struct member : pegtl::sor< at_member, key_member > {};  // TODO: Check for consistent right-padding of this and how it is used.
+            struct member : pegtl::sor< at_member, key_member > {};
 
             template< typename U > struct member_list_impl : pegtl::until< U, member, wss, member_comma > {};
 
