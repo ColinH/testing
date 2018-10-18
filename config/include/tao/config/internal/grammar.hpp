@@ -80,7 +80,7 @@ namespace tao
             struct copy_value : pegtl::if_must< copy_s, wsp, phase1_key > {};
             struct at_value : pegtl::if_must< at, copy_value > {};
 
-            struct value_part : pegtl::sor< null_s, true_s, false_s, array, object, reference, at_value, number_value > {};  // TODO: All the rest (binary, strings, all numbers).
+            struct value_part : pegtl::sor< null_s, true_s, false_s, array, object, reference, at_value, number_value > {};  // TODO: All the rest (binary, strings, proper numbers).
 
             struct value_plus : plus {};
             struct value_list : pegtl::list< value_part, value_plus, ws1 > {};

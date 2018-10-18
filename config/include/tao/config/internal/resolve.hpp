@@ -112,6 +112,7 @@ namespace tao
          {
             assert( !st.stack.empty() );
             assert( !st.keys.empty() );
+            assert( !st.keys.back().empty() );
 
             const auto& r = resolve_for_get( *st.stack.back(), st.keys.back() );
             st.keys.pop_back();
@@ -127,6 +128,7 @@ namespace tao
          {
             assert( !st.stack.empty() );
             assert( !st.keys.empty() );
+            assert( !st.keys.back().empty() );
 
             auto& r = resolve_for_set( *st.stack.back(), st.keys.back() );
             st.keys.pop_back();
