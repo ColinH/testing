@@ -4,6 +4,7 @@
 #define TAO_CONFIG_INTERNAL_ACTION_HPP
 
 #include "control.hpp"
+#include "delete.hpp"
 #include "grammar.hpp"
 #include "pegtl.hpp"
 #include "state.hpp"
@@ -272,6 +273,17 @@ namespace tao
                auto& a = st.stack.back()->get_array();
                const auto& v = resolve_and_pop_for_get( st ).get_array();
                a.insert( a.end(), v.begin(), v.end() );
+            }
+         };
+
+         template<>
+         struct action< rules::delete_member >
+         {
+            static void apply0( state& st )
+            {
+               assert( !st.keys.empty() );
+
+               delete_and_pop( st );
             }
          };
 

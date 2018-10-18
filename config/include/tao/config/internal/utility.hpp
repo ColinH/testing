@@ -4,10 +4,10 @@
 #define TAO_CONFIG_INTERNAL_UTILITY_HPP
 
 #include <cassert>
+#include <stdexcept>
 #include <vector>
 
 #include "pointer.hpp"
-#include "resolve.hpp"
 #include "state.hpp"
 #include "value.hpp"
 
@@ -17,6 +17,60 @@ namespace tao
    {
       namespace internal
       {
+         inline value* array_find( value& v, const std::size_t i )
+         {
+            auto& a = v.get_array();
+            return ( i < a.size() ) ? ( a.data() + i ) : nullptr;
+         }
+
+         inline const value* array_find( const value& v, const std::size_t i )
+         {
+            const auto& a = v.get_array();
+            return ( i < a.size() ) ? ( a.data() + i ) : nullptr;
+         }
+
+         inline std::size_t array_size( const std::vector< value >& a, const std::size_t n )
+         {
+            std::size_t r = 0;
+
+            for( std::size_t i = 0; i < n; ++i ) {
+               if( a[ i ].t ) {
+                  throw std::runtime_error( "resolve requires array size of phase two reference" );
+               }
+               if( !a[ i ].is_array() ) {
+                  throw std::runtime_error( "resolve requires array size of non-array" );
+               }
+               r += a[ i ].unsafe_get_array().size();
+            }
+            return r;
+         }
+
+         struct array_pair
+         {
+            std::size_t n;
+            std::vector< value >& a;
+         };
+
+         inline array_pair array_find( std::vector< value >& a, std::size_t n )
+         {
+            for( auto& v : a ) {
+               if( v.t ) {
+                  throw std::runtime_error( "phase one across phase two reference" );
+               }
+               if( !v.is_array() ) {
+                  throw std::runtime_error( "phase one size of non-array" );
+               }
+               auto& b = v.unsafe_get_array();
+               const auto s = b.size();
+
+               if( n < s ) {
+                  return { n, b };
+               }
+               n -= s;
+            }
+            throw std::runtime_error( "phase one array out of bounds" );
+         }
+
          template< typename T >
          void begin_container( state& st )
          {

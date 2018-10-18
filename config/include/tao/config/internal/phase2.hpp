@@ -61,7 +61,7 @@ namespace tao
                   p.emplace_back( token_from_value( i ) );
                }
             }
-            v = resolve_for_get( r, p );
+            v = resolve_for_get( r, p );  // TODO: Fix this.
          }
 
          inline void phase2_addition( const value& r, value& v )

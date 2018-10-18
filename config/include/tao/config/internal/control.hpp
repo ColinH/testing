@@ -4,6 +4,7 @@
 #define TAO_CONFIG_INTERNAL_CONTROL_HPP
 
 #include "pegtl.hpp"
+#include "resolve.hpp"
 #include "utility.hpp"
 
 namespace tao

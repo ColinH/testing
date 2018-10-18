@@ -1,0 +1,96 @@
+// Copyright (c) 2018 Dr. Colin Hirsch
+
+#ifndef TAO_CONFIG_INTERNAL_DELETE_HPP
+#define TAO_CONFIG_INTERNAL_DELETE_HPP
+
+#include <cassert>
+#include <stdexcept>
+
+#include "pointer.hpp"
+#include "state.hpp"
+#include "token.hpp"
+#include "utility.hpp"
+#include "value.hpp"
+
+namespace tao
+{
+   namespace config
+   {
+      namespace internal
+      {
+         inline void delete_final( value* const v, const token& t )
+         {
+            assert( v );
+            assert( v->t == annotation::ADDITION );
+
+            switch( t.t ) {
+               case token::KEY:
+                  for( auto& w : v->get_array() ) {
+                     if( w.t ) {
+                        throw std::runtime_error( "delete across reference" );
+                     }
+                     if( !w.is_object() ) {
+                        throw std::runtime_error( "delete with name in non-object" );
+                     }
+                     w.get_object().erase( t.k );
+                  }
+                  break;
+               case token::INDEX: {
+                  auto p = array_find( v->get_array(), t.i );
+                  p.a.erase( p.a.begin() + p.n );
+               }  break;
+               case token::APPEND:
+                  throw std::runtime_error( "delete has append in key" );  // TODO: Or delete last element?
+            }
+         }
+
+         inline void delete_recursive( value* const v, const pointer& p, const std::size_t i )
+         {
+            assert( v );
+            assert( v->t == annotation::ADDITION );
+            assert( i < p.size() );
+
+            if( i + 1 == p.size() ) {
+               delete_final( v, p.back() );
+               return;
+            }
+            switch( p[ i ].t ) {
+               case token::KEY:
+                  for( auto& w : v->get_array() ) {
+                     if( w.t ) {
+                        throw std::runtime_error( "delete across reference" );
+                     }
+                     if( !w.is_object() ) {
+                        throw std::runtime_error( "delete with name in non-object" );
+                     }
+                     if( auto* x = w.find( p[ i ].k ) ) {
+                        delete_recursive( x, p, i + 1 );
+                     }
+                  }
+                  break;
+               case token::INDEX: {
+                  auto q = array_find( v->get_array(), p[ i ].i );
+                  delete_recursive( q.a.data() + q.n, p, i + 1 );
+               }  break;
+               case token::APPEND:
+                  throw std::runtime_error( "delete has append in key" );  // TODO: Or can we assert() here? Check the grammar.
+            }
+         }
+
+         inline void delete_and_pop( state& st )
+         {
+            assert( !st.stack.empty() );
+            assert( !st.keys.empty() );
+            assert( !st.keys.back().empty() );
+
+            delete_recursive( st.stack.front(), st.keys.back(), 0 );  // TODO: Or start at *( st.stack.end() - 2 )?
+            st.keys.pop_back();
+         }
+
+      }  // namespace internal
+
+   }  // namespace config
+
+}  // namespace tao
+
+#endif
