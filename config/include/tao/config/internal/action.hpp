@@ -175,7 +175,7 @@ namespace tao
             static void apply0( state& st )
             {
                if( st.temp.type() != json::type::DISCARDED ) {
-                  resolve_and_pop_for_set( st ) = std::move( st.temp );
+                  resolve_and_pop_for_set( st ).emplace_back( std::move( st.temp ) );
                   st.temp.discard();
                }
             }

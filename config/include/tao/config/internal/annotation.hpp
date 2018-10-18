@@ -23,7 +23,7 @@ namespace tao
 
             void set_kind( const kind k )
             {
-               assert( !m_kind );
+               assert( !m_kind || ( m_kind == k ) );  // TODO: Find out where it's already set.
                assert( static_cast< const Value& >( *this ).is_array() );
 
                m_kind = k;

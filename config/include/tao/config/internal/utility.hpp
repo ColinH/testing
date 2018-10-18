@@ -29,7 +29,7 @@ namespace tao
                   st.stack.emplace_back( &t );
                }  break;
                case json::type::OBJECT:
-                  st.stack.emplace_back( &( resolve_and_pop_for_set( st ) = T{ 0 } ) );  // TODO: Disentangle again?
+                  st.stack.emplace_back( &resolve_and_pop_for_set( st ) );
                   break;
                default:
                   assert( false );
