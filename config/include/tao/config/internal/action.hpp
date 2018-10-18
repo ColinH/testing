@@ -131,11 +131,11 @@ namespace tao
             static void apply0( state& st )
             {
                assert( !st.stack.empty() );
-               assert( st.stack.back()->kind() );
+               assert( st.stack.back()->t );
                assert( st.stack.back()->is_array() );
 
                st.stack.emplace_back( &st.stack.back()->get_array().emplace_back( json::empty_array ) );
-               st.stack.back()->set_kind( kind::REFERENCE );
+               st.stack.back()->t = annotation::REFERENCE;
             }
          };
 
@@ -179,7 +179,7 @@ namespace tao
             static void apply0( state& st )
             {
                if( st.temp.type() != json::type::DISCARDED ) {
-                  assert( !st.temp.kind() );
+                  assert( !st.temp.t );
                   assert( st.stack.size() > 1 );
 
                   resolve_and_pop_for_set( st ).emplace_back( std::move( st.temp ) );
@@ -213,7 +213,7 @@ namespace tao
             static void apply0( state& st )
             {
                if( st.temp.type() != json::type::DISCARDED ) {
-                  assert( !st.temp.kind() );
+                  assert( !st.temp.t );
                   assert( st.stack.size() > 1 );
 
                   st.stack.back()->emplace_back( std::move( st.temp ) );
@@ -240,7 +240,7 @@ namespace tao
             {
                if( st.temp.type() != json::type::DISCARDED ) {
                   assert( !st.stack.empty() );
-                  assert( st.stack.back()->kind() == kind::ADDITION );
+                  assert( st.stack.back()->t == annotation::ADDITION );
 
                   st.stack.back()->emplace_back( std::move( st.temp ) );
                   st.temp.discard();
@@ -265,7 +265,7 @@ namespace tao
             static void apply0( state& st )
             {
                assert( !st.stack.empty() );
-               assert( st.stack.back()->kind() == kind::ADDITION );
+               assert( st.stack.back()->t == annotation::ADDITION );
                assert( st.stack.back()->is_array() );
                assert( st.temp.type() == json::type::DISCARDED );
 

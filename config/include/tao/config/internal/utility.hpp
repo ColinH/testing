@@ -21,7 +21,7 @@ namespace tao
          void begin_container( state& st )
          {
             assert( !st.stack.empty() );
-            assert( st.stack.back()->kind() == kind::ADDITION );
+            assert( st.stack.back()->t == annotation::ADDITION );
             assert( st.stack.back()->is_array() );
 
             st.stack.emplace_back( &st.stack.back()->get_array().emplace_back( T{ 0 } ) );

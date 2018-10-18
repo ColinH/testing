@@ -55,7 +55,7 @@ namespace tao
             static void start( const Input&, state& st )
             {
                assert( !st.stack.empty() );
-               assert( !st.stack.back()->kind() );
+               assert( !st.stack.back()->t );
 
                switch( st.stack.back()->type() ) {
                   case json::type::ARRAY:
@@ -67,7 +67,7 @@ namespace tao
                   default:
                      assert( false );
                }
-               st.stack.back()->set_kind( kind::ADDITION );
+               st.stack.back()->t = annotation::ADDITION;
             }
          };
 

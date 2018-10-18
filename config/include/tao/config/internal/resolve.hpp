@@ -6,7 +6,6 @@
 #include <cassert>
 #include <stdexcept>
 
-#include "kind.hpp"
 #include "pointer.hpp"
 #include "state.hpp"
 #include "token.hpp"
@@ -39,7 +38,7 @@ namespace tao
             std::size_t r = 0;
 
             for( std::size_t i = 0; i < n; ++i ) {
-               if( a[ i ].kind() ) {
+               if( a[ i ].t ) {
                   throw std::runtime_error( "resolve requires array size of phase two reference" );
                }
                if( !a[ i ].is_array() ) {
@@ -56,7 +55,7 @@ namespace tao
                return nullptr;
             }
             assert( v );
-            assert( v->kind() == kind::ADDITION );
+            assert( v->t == annotation::ADDITION );
 
             if( i == p.size() ) {
                return v;
@@ -67,23 +66,23 @@ namespace tao
             for( std::size_t j = 0; j < s; ++j ) {
                const value& w = a[ s - j - 1 ];
 
-               assert( w.kind() != kind::ADDITION );
+               assert( w.t != annotation::ADDITION );
 
-               if( w.kind() == kind::REFERENCE ) {
+               if( w.t == annotation::REFERENCE ) {
                   throw std::runtime_error( "resolve for get across phase two reference" );
                }
                switch( p[ i ].t ) {
-                  case token::type::KEY:
+                  case token::KEY:
                      if ( auto *x = w.find( p[ i ].k ) ) {
                         return resolve_for_get( x, p, i + 1 );
                      }
                      break;
-                  case token::type::INDEX:
+                  case token::INDEX:
                      if ( auto *x = array_find( w, p[ i ].i - array_size( a, s - j - 1 ) ) ) {
                         return resolve_for_get( x, p, i + 1 );
                      }
                      break;
-                  case token::type::APPEND:
+                  case token::APPEND:
                      throw std::runtime_error( "resolve for get has append in key" );
                }
             }
@@ -96,20 +95,20 @@ namespace tao
                return nullptr;
             }
             assert( v );
-            assert( v->kind() == kind::ADDITION );
+            assert( v->t == annotation::ADDITION );
 
             if( i == p.size() ) {
                return v;
             }
             auto& a = v->get_array();  // value_list
 
-            if( p[ i ].t == token::type::APPEND ) {
+            if( p[ i ].t == token::APPEND ) {
                if( a.empty() ) {
                   a.emplace_back( json::empty_array );  // array value
                }
                auto& b = a.back().get_array();
                auto& c = b.emplace_back( json::empty_array );
-               c.set_kind( kind::ADDITION );
+               c.t = annotation::ADDITION;
                return resolve_for_set( &c, p, i + 1 );
             }
             const auto s = a.size();
@@ -117,27 +116,27 @@ namespace tao
             for( std::size_t j = 0; j < s; ++j ) {
                value& w = a[ s - j - 1 ];
 
-               assert( w.kind() != kind::ADDITION );
+               assert( w.t != annotation::ADDITION );
 
-               if( w.kind() == kind::REFERENCE ) {
+               if( w.t == annotation::REFERENCE ) {
                   throw std::runtime_error( "resolve for get across phase two reference" );
                }
                switch( p[ i ].t ) {
-                  case token::type::KEY:
+                  case token::KEY:
                      if ( auto* x = w.find( p[ i ].k ) ) {
                         return resolve_for_set( x, p, i + 1 );
                      }
                      break;
-                  case token::type::INDEX:
+                  case token::INDEX:
                      if( auto* x = array_find( w, p[ i ].i - array_size( a, s - j - 1 ) ) ) {
                         return resolve_for_set( x, p, i + 1 );
                      }
                      break;
-                  case token::type::APPEND:
+                  case token::APPEND:
                      assert( false );  // Handled above.
                }
             }
-            if( p[ i ].t == token::type::INDEX ) {
+            if( p[ i ].t == token::INDEX ) {
                throw std::runtime_error( "resolve for get index not found" );
             }
             if( a.empty() ) {
@@ -145,7 +144,7 @@ namespace tao
             }
             auto& b = a.back().get_object();
             auto d = b.emplace( p[ i ].k, json::empty_array );
-            d.first->second.set_kind( kind::ADDITION );
+            d.first->second.t = annotation::ADDITION;
             return resolve_for_set( &d.first->second, p, i + 1 );
          }
 

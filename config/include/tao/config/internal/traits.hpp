@@ -24,7 +24,7 @@ namespace tao
             : public json::traits< void >
          {
             template< typename Value >
-            using public_base = annotation< Value >;
+            using public_base = annotation;
          };
 
       }  // namespace internal

@@ -66,12 +66,12 @@ namespace tao
                   const auto& a = v.unsafe_get_array();
                   const auto s = a.size();
                   consumer.begin_array( s );
-                  if( v.kind() ) {
-                     switch( *v.kind() ) {
-                        case kind::ADDITION:
+                  if( v.t ) {
+                     switch( *v.t ) {
+                        case annotation::ADDITION:
                            os << "+[";
                            break;
-                        case kind::REFERENCE:
+                        case annotation::REFERENCE:
                            os << "*[";
                            break;
                      }

@@ -23,7 +23,7 @@ namespace tao
                temp.discard();
                result.prepare_array();
                stack.emplace_back( &result );
-               result.set_kind( kind::ADDITION );
+               result.t = annotation::ADDITION;
                stack.emplace_back( &result.get_array().emplace_back( json::empty_object ) );
             }
 
