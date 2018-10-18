@@ -4,6 +4,7 @@
 #define TAO_CONFIG_CHECK_FILE_HPP
 
 #include "internal/grammar.hpp"
+#include "internal/pegtl.hpp"
 
 namespace tao
 {

@@ -55,7 +55,7 @@ namespace tao
             struct value_list;
             struct value_part;
 
-            struct identifier : pegtl::identifier {};  // TODO: Allow more here?
+            struct identifier : pegtl::identifier {};  // TODO: More?
 
             struct member_comma : pegtl::opt< comma, wss > {};
             struct element_comma : pegtl::opt< comma, wss > {};
@@ -73,7 +73,7 @@ namespace tao
             struct member_key : pegtl::seq< phase1_name, pegtl::star_must< dot, phase1_part > > {};
             struct phase2_key : pegtl::list_must< phase2_part, dot > {};
 
-            struct reference : pegtl::if_must< round_a, phase2_key, round_z > {};  // TODO: Right-pad this?
+            struct reference : pegtl::if_must< round_a, phase2_key, round_z > {};
 
             struct number_value : pegtl::plus< pegtl::digit > {};
 
@@ -83,11 +83,11 @@ namespace tao
             struct value_part : pegtl::sor< null_s, true_s, false_s, array, object, reference, at_value, number_value > {};  // TODO: All the rest (binary, strings, all numbers).
 
             struct value_plus : plus {};
-            struct value_list : pegtl::list< value_part, value_plus, ws1 > {};  // NOT right-padded!
+            struct value_list : pegtl::list< value_part, value_plus, ws1 > {};
 
-            struct key_member : pegtl::if_must< member_key, wss, equals, wss, value_list, wss > {};
+            struct key_member : pegtl::if_must< member_key, wss, equals, wss, value_list, wss > {};  // TODO: plus_equals
 
-            struct filename_content : pegtl::star< pegtl::not_one< '"' > > {};  // TODO: The full escaping shenanigans?
+            struct filename_content : pegtl::star< pegtl::not_one< '"' > > {};  // TODO: Escaping?
             struct include_filename : pegtl::if_must< quote_2, filename_content, quote_2 > {};
 
             struct delete_member : pegtl::if_must< delete_s, wsp, phase1_key > {};
@@ -98,12 +98,12 @@ namespace tao
 
             template< typename U > struct member_list_impl : pegtl::until< U, member, wss, member_comma > {};
 
-            struct element_list : pegtl::until< square_z, value_list, wss, element_comma > {};  // TOOD: Check right-padding of value.
+            struct element_list : pegtl::until< square_z, value_list, wss, element_comma > {};
             struct member_list : member_list_impl< curly_z > {};
             struct grammar_list : member_list_impl< pegtl::eof > {};
 
-            struct array : pegtl::if_must< square_a, wss, element_list, wss > {};  // TODO: Check right-padding of this and how it is used.
-            struct object : pegtl::if_must< curly_a, wss, member_list, wss > {};  // TODO: Check right-padding of this and how it is used.
+            struct array : pegtl::if_must< square_a, wss, element_list > {};
+            struct object : pegtl::if_must< curly_a, wss, member_list > {};
 
             struct grammar : pegtl::must< wss, grammar_list > {};
 
