@@ -27,29 +27,24 @@ namespace tao
             st.stack.emplace_back( &st.stack.back()->get_array().emplace_back( T{ 0 } ) );
          }
 
-         inline pointer array_to_pointer( const std::vector< value >& v )
+         inline token token_from_value( const value& v )
          {
-            pointer result;
+            assert( !v.t );
 
-            for( const auto& i : v ) {
-               //  assert( !i.kind );
-
-               switch( i.type() ) {
-                  case json::type::STRING:
-                  case json::type::STRING_VIEW:
-                     result.push_back( token( i.as< std::string >() ) );
-                     break;
-                  case json::type::SIGNED:
-                  case json::type::UNSIGNED:
-                     result.push_back( token( i.as< std::size_t >() ) );
-                     break;
-                  case json::type::NULL_:
-                     result.push_back( token() );
-                  default:
-                     throw "TODO";
-               }
+            switch( v.type() ) {
+               case json::type::STRING:
+               case json::type::STRING_VIEW:
+                  return token( v.as< std::string >() );
+                  break;
+               case json::type::SIGNED:
+               case json::type::UNSIGNED:
+                  return token( v.as< std::size_t >() );
+                  break;
+               case json::type::NULL_:
+                  return token();
+               default:
+                  throw std::runtime_error( "invalid json type for reference" );
             }
-            return result;
          }
 
       }  // namespace internal

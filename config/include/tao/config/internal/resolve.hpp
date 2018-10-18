@@ -9,7 +9,6 @@
 #include "pointer.hpp"
 #include "state.hpp"
 #include "token.hpp"
-#include "to_stream.hpp"  // TODO: Remove after debugging.
 #include "utility.hpp"
 #include "value.hpp"
 
