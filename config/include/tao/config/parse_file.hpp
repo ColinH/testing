@@ -3,36 +3,25 @@
 #ifndef TAO_CONFIG_PARSE_FILE_HPP
 #define TAO_CONFIG_PARSE_FILE_HPP
 
-#include <cassert>
+#include "value.hpp"
 
-#include "internal/action.hpp"
-#include "internal/control.hpp"
-#include "internal/grammar.hpp"
-#include "internal/pegtl.hpp"
-#include "internal/phase2.hpp"
-#include "internal/state.hpp"
-#include "internal/value.hpp"
+#include "internal/parse_file.hpp"
 
 namespace tao
 {
    namespace config
    {
-      inline internal::value parse_file( const std::string& filename )
+      template< template< typename... > class Traits >
+      json::basic_value< Traits > basic_parse_file( const std::string& filename )
       {
          internal::state st;
+         internal::parse_file_impl( st, filename );
+         return internal::phase2< Traits >( st.result );
+      }
 
-         assert( st.stack.size() == 2 );
-         assert( st.stack.front() == &st.result );
-
-         json_pegtl::file_input in( filename );
-         st.result.position.set_position( in.position() );
-         st.stack.back()->position.set_position( in.position() );
-         json_pegtl::parse< internal::grammar, internal::action, internal::control >( in, st );
-
-         assert( st.stack.size() == 2 );
-         assert( st.stack.front() == &st.result );
-
-         return internal::phase2( st.result );
+      inline value parse_file( const std::string& filename )
+      {
+         return basic_parse_file< traits >( filename );
       }
 
    }  // namespace config

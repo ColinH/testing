@@ -11,11 +11,10 @@ namespace tao
    {
       namespace internal
       {
-         inline json::null_t null_addition( const std::vector< value >& a )
+         template< template< typename... > class Traits >
+         json::null_t null_addition( const std::vector< json::basic_value< Traits > >& a )
          {
             for( const auto& e : a ) {
-               assert( !e.t );
-
                switch( e.type() ) {
                   case json::type::NULL_:
                      break;
@@ -26,13 +25,12 @@ namespace tao
             return json::null;
          }
 
-         inline bool boolean_addition( const std::vector< value >& a )
+         template< template< typename... > class Traits >
+         bool boolean_addition( const std::vector< json::basic_value< Traits > >& a )
          {
             bool result = false;
 
             for( const auto& e : a ) {
-               assert( !e.t );
-
                switch( e.type() ) {
                   case json::type::BOOLEAN:
                      result |= e.unsafe_get_boolean();
@@ -44,13 +42,12 @@ namespace tao
             return result;
          }
 
-         inline double double_addition( const std::vector< value >& a )
+         template< template< typename... > class Traits >
+         double double_addition( const std::vector< json::basic_value< Traits > >& a )
          {
             double result = 0.0;
 
             for( const auto& e : a ) {
-               assert( !e.t );
-
                switch( e.type() ) {
                   case json::type::DOUBLE:
                      result += e.unsafe_get_double();
@@ -62,13 +59,12 @@ namespace tao
             return result;
          }
 
-         inline __int128_t integer_addition( const std::vector< value >& a )
+         template< template< typename... > class Traits >
+         __int128_t integer_addition( const std::vector< json::basic_value< Traits > >& a )
          {
             __int128_t result = 0;
 
             for( const auto& e : a ) {
-               assert( !e.t );
-
                switch( e.type() ) {
                   case json::type::SIGNED:
                      result += e.unsafe_get_signed();
@@ -83,13 +79,12 @@ namespace tao
             return result;
          }
 
-         inline std::string string_addition( const std::vector< value >& a )
+         template< template< typename... > class Traits >
+         std::string string_addition( const std::vector< json::basic_value< Traits > >& a )
          {
             std::ostringstream oss;
 
             for( const auto& e : a ) {
-               assert( !e.t );
-
                switch( e.type() ) {
                   case json::type::STRING:
                      oss << e.unsafe_get_string();
@@ -104,13 +99,12 @@ namespace tao
             return oss.str();
          }
 
-         inline std::vector< std::byte > binary_addition( const std::vector< value >& a )
+         template< template< typename... > class Traits >
+         std::vector< std::byte > binary_addition( const std::vector< json::basic_value< Traits > >& a )
          {
             std::vector< std::byte > result;
 
             for( const auto& e : a ) {
-               assert( !e.t );
-
                switch( e.type() ) {
                   case json::type::BINARY:
                      result.insert( result.end(), e.unsafe_get_binary().begin(), e.unsafe_get_binary().end() );
@@ -125,13 +119,12 @@ namespace tao
             return result;
          }
 
-         inline std::vector< value > array_addition( const std::vector< value >& a )
+         template< template< typename... > class Traits >
+         std::vector< json::basic_value< Traits > > array_addition( const std::vector< json::basic_value< Traits > >& a )
          {
-            std::vector< value > result;
+            std::vector< json::basic_value< Traits > > result;
 
             for( const auto& e : a ) {
-               assert( !e.t );
-
                switch( e.type() ) {
                   case json::type::ARRAY:
                      result.insert( result.end(), e.unsafe_get_array().begin(), e.unsafe_get_array().end() );
@@ -143,13 +136,12 @@ namespace tao
             return result;
          }
 
-         inline std::map< std::string, value > object_addition( const std::vector< value >& a )
+         template< template< typename... > class Traits >
+         std::map< std::string, json::basic_value< Traits > > object_addition( const std::vector< json::basic_value< Traits > >& a )
          {
-            std::map< std::string, value > result;
+            std::map< std::string, json::basic_value< Traits > > result;
 
             for( const auto& e : a ) {
-               assert( !e.t );
-
                switch( e.type() ) {
                   case json::type::OBJECT:
                      for( const auto& i : e.unsafe_get_object() ) {
@@ -163,46 +155,46 @@ namespace tao
             return result;
          }
 
-         inline value integer_addition_value( const std::vector< value >& a )
+         template< template< typename... > class Traits >
+         json::basic_value< Traits > integer_addition_value( const std::vector< json::basic_value< Traits > >& a )
          {
             const auto t = integer_addition( a );
-            return ( t < 0 ) ? value( std::int64_t( t ) ) : value( std::uint64_t( t ) );  // TODO: Check for overflow etc.
+            return ( t < 0 ) ? json::basic_value< Traits >( std::int64_t( t ) ) : json::basic_value< Traits >( std::uint64_t( t ) );  // TODO: Check for overflow etc.
          }
 
-         inline value value_addition( const std::vector< value >& a )
+         template< template< typename... > class Traits >
+         json::basic_value< Traits > value_addition( const std::vector< json::basic_value< Traits > >& a )
          {
             assert( !a.empty() );
 
             switch( a[ 0 ].type() ) {
                case json::type::NULL_:
-                  return value( null_addition( a ) );
+                  return json::basic_value< Traits >( null_addition( a ) );
                case json::type::ARRAY:
-                  return value( array_addition( a ) );
+                  return json::basic_value< Traits >( array_addition( a ) );
                case json::type::OBJECT:
-                  return value( object_addition( a ) );
+                  return json::basic_value< Traits >( object_addition( a ) );
                case json::type::BOOLEAN:
-                  return value( boolean_addition( a ) );
+                  return json::basic_value< Traits >( boolean_addition( a ) );
                case json::type::SIGNED:
                case json::type::UNSIGNED:
                   return integer_addition_value( a );
                case json::type::STRING:
                case json::type::STRING_VIEW:
-                  return value( string_addition( a ) );
+                  return json::basic_value< Traits >( string_addition( a ) );
                case json::type::BINARY:
                case json::type::BINARY_VIEW:
-                  return value( binary_addition( a ) );
+                  return json::basic_value< Traits >( binary_addition( a ) );
                default:
                   std::cerr << json::to_string( a[ 0 ].type() ) << std::endl;
                   throw std::runtime_error( "invalid json type for addition" );
             }
          }
 
-         inline value value_addition( const value& v )
+         template< template< typename... > class Traits >
+         json::basic_value< Traits > value_addition( const json::basic_value< Traits >& v )
          {
-            assert( v.t == annotation::ADDITION );
-            assert( v.is_array() );
-
-            return value_addition( v.unsafe_get_array() );
+            return value_addition< Traits >( v.unsafe_get_array() );
          }
 
       }  // namespace internal
