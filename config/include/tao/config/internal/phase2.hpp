@@ -17,31 +17,38 @@ namespace tao
    {
       namespace internal
       {
-         inline void phase2_generic( const value& r, value& v );
+         inline value phase2_regular( const value& r, const value& v );
+         inline value phase2_addition( const value& r, const value& v );
+         inline value phase2_reference( const value& r, const value& v );
 
-         inline void phase2_regular( const value& r, value& v )
+         inline value phase2_regular( const value& r, const value& v )
          {
             assert( !v.t );
 
             switch( v.type() ) {
-               case json::type::ARRAY:
+               case json::type::ARRAY: {
+                  value t = json::empty_array;
                   for( auto& i : v.unsafe_get_array() ) {
-                     phase2_generic( r, i );
+                     t.emplace_back( phase2_addition( r, i ) );
                   }
-                  break;
-               case json::type::OBJECT:
+                  return t;
+               }  break;
+               case json::type::OBJECT: {
+                  value t = json::empty_object;
                   for( auto& i : v.unsafe_get_object() ) {
-                     phase2_generic( r, i.second );
+                     t.emplace( i.first, phase2_addition( r, i.second ) );
                   }
-                  break;
+                  return t;
+               }  break;
                default:
-                  break;
+                  return v;
             }
          }
 
-         inline void phase2_reference( const value& r, value& v )
+         inline value phase2_reference( const value& r, const value& v )
          {
             assert( v.t == annotation::REFERENCE );
+            assert( v.is_array() );
 
             pointer p;
 
@@ -49,62 +56,42 @@ namespace tao
                assert( i.t != annotation::ADDITION );
 
                if( i.t == annotation::REFERENCE ) {
-                  phase2_reference( r, i );
-                  p.emplace_back( token_from_value( value_addition( i ) ) );
+                  p.emplace_back( token_from_value( value_addition( phase2_reference( r, i ) ) ) );
                }
                else {
                   p.emplace_back( token_from_value( i ) );
                }
             }
-            v = resolve_for_get( r, p );
+            return resolve_for_get( r, p );
          }
 
-         inline void phase2_addition( const value& r, value& v )
+         inline value phase2_addition( const value& r, const value& v )
          {
             assert( v.t == annotation::ADDITION );
 
             std::vector< value > t;
 
-            for( auto& i : v.get_array() ) {
+            for( const auto& i : v.get_array() ) {
                assert( i.t != annotation::ADDITION );
 
                if( i.t == annotation::REFERENCE ) {
-                  phase2_reference( r, i );
-                  if( i.t == annotation::ADDITION ) {
-                     const auto& a = i.get_array();
-                     t.insert( t.end(), a.begin(), a.end() );
-                  }
-                  else {
-                     assert( i.t != annotation::REFERENCE );
-                     t.emplace_back( i );  // TODO: Move?
-                  }
+                  const auto a = phase2_reference( r, i );
+                  assert( a.t == annotation::ADDITION );
+                  const auto& b = a.get_array();
+                  t.insert( t.end(), b.begin(), b.end() );
                }
                else {
-                  phase2_regular( r, i );
-                  t.emplace_back( std::move( i ) );
+                  t.emplace_back( phase2_regular( r, i ) );
                }
             }
-            v = value_addition( t );
+            return value_addition( t );
          }
 
-         inline void phase2_generic( const value& r, value& v )
+         value phase2( const value& v )
          {
-            if( !v.t ) {
-               return phase2_regular( r, v );
-            }
-            switch( *v.t ) {
-               case annotation::ADDITION:
-                  return phase2_addition( r, v );
-               case annotation::REFERENCE:
-                  return phase2_reference( r, v );
-            }
-         }
+            // TODO: Protect against cycles (infinite recursion) -- set? counter? annotation?
 
-         inline void phase2( value& v )
-         {
-            // TODO: Protect against cycles (infinite recursion).
-
-            phase2_generic( v, v );
+            return phase2_addition( v, v );
          }
 
       }  // namespace internal

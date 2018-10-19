@@ -32,8 +32,7 @@ namespace tao
          assert( st.stack.size() == 2 );
          assert( st.stack.front() == &st.result );
 
-         internal::phase2( st.result );
-         return std::move( st.result );  // TODO: Change type of result from config::internal::value to config::value (or basic_value< user_traits >).
+         return internal::phase2( st.result );
       }
 
    }  // namespace config

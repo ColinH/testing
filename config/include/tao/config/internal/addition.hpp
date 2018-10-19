@@ -192,15 +192,13 @@ namespace tao
                case json::type::BINARY_VIEW:
                   return value( binary_addition( a ) );
                default:
+                  std::cerr << json::to_string( a[ 0 ].type() ) << std::endl;
                   throw std::runtime_error( "invalid json type for addition" );
             }
          }
 
          inline value value_addition( const value& v )
          {
-            if( !v.t ) {
-               return v;
-            }
             assert( v.t == annotation::ADDITION );
             assert( v.is_array() );
 
