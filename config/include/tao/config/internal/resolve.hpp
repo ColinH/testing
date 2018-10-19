@@ -20,14 +20,41 @@ namespace tao
       {
          // All resolve functions return a pointer to the array representing the value addition.
 
-         inline const value* resolve_for_get( const value* const v, const pointer& p, const std::size_t i )
+         inline const value* resolve_for_get( const value* const v, const pointer& p, const std::size_t i );
+
+         inline const value* resolve_for_get_value( const value* const v, const pointer& p, const std::size_t i )
          {
             assert( v );
-            assert( v->t == annotation::ADDITION );
+            assert( !v->t );
             assert( i <= p.size() );
 
             if( i == p.size() ) {
                return v;
+            }
+            switch( p[ i ].t ) {
+               case token::NAME:
+                  return resolve_for_get( &v->at( p[ i ].k ), p, i + 1 );
+               case token::INDEX:
+                  return resolve_for_get( &v->at( p[ i ].i ), p, i + 1 );
+               case token::APPEND:
+                  throw std::runtime_error( "resolve for get has append in key" );
+            }
+            assert( false );
+         }
+
+         inline const value* resolve_for_get( const value* const v, const pointer& p, const std::size_t i )
+         {
+            assert( v );
+            assert( i <= p.size() );
+
+            if( i == p.size() ) {
+               return v;
+            }
+            if( !v->t ) {
+               return resolve_for_get_value( v, p, i );
+            }
+            if( v->t == annotation::REFERENCE ) {
+               throw std::runtime_error( "resolve across reference" );
             }
             auto& a = v->get_array();
 

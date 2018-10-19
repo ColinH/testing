@@ -20,9 +20,7 @@ namespace tao
    {
       namespace internal
       {
-         inline void phase2_regular( const value& r, value& v );
-         inline void phase2_addition( const value& r, value& v );
-         inline void phase2_reference( const value& r, value& v );
+         inline void phase2_generic( const value& r, value& v );
 
          inline void phase2_regular( const value& r, value& v )
          {
@@ -31,12 +29,12 @@ namespace tao
             switch( v.type() ) {
                case json::type::ARRAY:
                   for( auto& i : v.unsafe_get_array() ) {
-                     phase2_addition( r, i );
+                     phase2_generic( r, i );
                   }
                   break;
                case json::type::OBJECT:
                   for( auto& i : v.unsafe_get_object() ) {
-                     phase2_addition( r, i.second );
+                     phase2_generic( r, i.second );
                   }
                   break;
                default:
@@ -55,13 +53,13 @@ namespace tao
 
                if( i.t == annotation::REFERENCE ) {
                   phase2_reference( r, i );
-                  p.emplace_back( token_from_value( value_addition( i.get_array() ) ) );
+                  p.emplace_back( token_from_value( value_addition( i ) ) );
                }
                else {
                   p.emplace_back( token_from_value( i ) );
                }
             }
-            v = resolve_for_get( r, p );  // TODO: Fix this.
+            v = resolve_for_get( r, p );
          }
 
          inline void phase2_addition( const value& r, value& v )
@@ -75,8 +73,14 @@ namespace tao
 
                if( i.t == annotation::REFERENCE ) {
                   phase2_reference( r, i );
-                  const auto& a = i.get_array();
-                  t.insert( t.end(), a.begin(), a.end() );
+                  if( i.t == annotation::ADDITION ) {
+                     const auto& a = i.get_array();
+                     t.insert( t.end(), a.begin(), a.end() );
+                  }
+                  else {
+                     assert( i.t != annotation::REFERENCE );
+                     t.emplace_back( i );  // TODO: Move?
+                  }
                }
                else {
                   phase2_regular( r, i );
@@ -86,19 +90,32 @@ namespace tao
             v = value_addition( t );
          }
 
+         inline void phase2_generic( const value& r, value& v )
+         {
+            if( !v.t ) {
+               return phase2_regular( r, v );
+            }
+            switch( *v.t ) {
+               case annotation::ADDITION:
+                  return phase2_addition( r, v );
+               case annotation::REFERENCE:
+                  return phase2_reference( r, v );
+            }
+         }
+
          inline void phase2( value& v )
          {
             // TODO: Protect against cycles (infinite recursion).
 
             std::cout << "<<< START <<<" << std::endl;
             to_stream( std::cout, v, 3 );
-            std::cout << ">>> START >>>" << std::endl;
+            std::cout << std::endl << ">>> START >>>" << std::endl;
 
-            phase2_addition( v, v );
+            phase2_generic( v, v );
 
             std::cout << "<<< FINISH <<<" << std::endl;
             to_stream( std::cout, v, 3 );
-            std::cout << ">>> FINISH >>>" << std::endl;
+            std::cout << std::endl << ">>> FINISH >>>" << std::endl;
          }
 
       }  // namespace internal

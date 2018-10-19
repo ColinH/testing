@@ -179,6 +179,17 @@ namespace tao
             }
          }
 
+         inline value value_addition( const value& v )
+         {
+            if( !v.t ) {
+               return v;
+            }
+            assert( v.t == annotation::ADDITION );
+            assert( v.is_array() );
+
+            return value_addition( v.unsafe_get_array() );
+         }
+
       }  // namespace internal
 
    }  // namespace config
