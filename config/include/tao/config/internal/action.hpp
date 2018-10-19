@@ -303,6 +303,22 @@ namespace tao
          };
 
          template<>
+         struct action< rules::debug_value >
+         {
+            static void apply0( state& st )
+            {
+               assert( !st.stack.empty() );
+               assert( st.stack.back()->t == annotation::ADDITION );
+               assert( st.stack.back()->is_array() );
+               assert( st.temp.type() == json::type::DISCARDED );
+
+               std::ostringstream o;
+               to_stream( o, resolve_and_pop_for_get( st ) );
+               st.temp.unsafe_assign_string( o.str() );
+            }
+         };
+
+         template<>
          struct action< rules::stderr_member >
          {
             static void apply0( state& st )

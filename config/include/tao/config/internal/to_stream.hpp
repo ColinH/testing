@@ -71,10 +71,10 @@ namespace tao
                   if( v.t ) {
                      switch( *v.t ) {
                         case annotation::ADDITION:
-                           os << "+[";
+                           os << "+|";
                            break;
                         case annotation::REFERENCE:
-                           os << "*[";
+                           os << "*|";
                            break;
                      }
                   }
@@ -107,6 +107,12 @@ namespace tao
                   assert( false );  // None of these used here.
             }
             assert( false );
+         }
+
+         void to_stream( std::ostream& os, const value& v )
+         {
+            json::jaxn::events::to_stream consumer( os );
+            from_value( os, consumer, v );
          }
 
          void to_stream( std::ostream& os, const value& v, const std::size_t indent )

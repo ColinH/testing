@@ -46,6 +46,7 @@ namespace tao
             struct false_s : pegtl::string< 'f', 'a', 'l', 's', 'e' > {};
 
             struct copy_s : pegtl::string< 'c', 'o', 'p', 'y' > {};
+            struct debug_s : pegtl::string< 'd', 'e', 'b', 'u', 'g' > {};
             struct stderr_s : pegtl::string< 's', 't', 'd', 'e', 'r', 'r' > {};
             struct stdout_s : pegtl::string< 's', 't', 'd', 'o', 'u', 't' > {};
             struct delete_s : pegtl::string< 'd', 'e', 'l', 'e', 't', 'e' > {};
@@ -80,7 +81,8 @@ namespace tao
             struct number_value : pegtl::plus< pegtl::digit > {};
 
             struct copy_value : pegtl::if_must< copy_s, wsp, phase1_key > {};
-            struct at_value : pegtl::if_must< at, copy_value > {};
+            struct debug_value : pegtl::if_must< debug_s, wsp, phase1_key > {};
+            struct at_value : pegtl::if_must< at, pegtl::sor< copy_value, debug_value > > {};
 
             struct value_part : pegtl::sor< null_s, true_s, false_s, array, object, reference, at_value, number_value > {};  // TODO: All the rest (binary, strings, proper numbers).
 
