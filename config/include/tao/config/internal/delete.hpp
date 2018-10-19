@@ -24,21 +24,12 @@ namespace tao
             assert( v->t == annotation::ADDITION );
 
             switch( t.t ) {
-               case token::KEY:
-                  for( auto& w : v->get_array() ) {
-                     if( w.t ) {
-                        throw std::runtime_error( "delete across reference" );
-                     }
-                     if( !w.is_object() ) {
-                        throw std::runtime_error( "delete with name in non-object" );
-                     }
-                     w.get_object().erase( t.k );
-                  }
+               case token::NAME:
+                  object_apply_all( v->get_array(), [ &t ]( value& v ){ v.get_object().erase( t.k ); } );
                   break;
-               case token::INDEX: {
-                  auto p = array_find( v->get_array(), t.i );
-                  p.a.erase( p.a.begin() + p.n );
-               }  break;
+               case token::INDEX:
+                  array_apply( v->get_array(), t.i, []( auto& a, const std::size_t n ){ a.erase( a.begin() + n ); } );
+                  break;
                case token::APPEND:
                   throw std::runtime_error( "delete has append in key" );  // TODO: Or delete last element?
             }
@@ -55,23 +46,12 @@ namespace tao
                return;
             }
             switch( p[ i ].t ) {
-               case token::KEY:
-                  for( auto& w : v->get_array() ) {
-                     if( w.t ) {
-                        throw std::runtime_error( "delete across reference" );
-                     }
-                     if( !w.is_object() ) {
-                        throw std::runtime_error( "delete with name in non-object" );
-                     }
-                     if( auto* x = w.find( p[ i ].k ) ) {
-                        delete_recursive( x, p, i + 1 );
-                     }
-                  }
+               case token::NAME:
+                  object_apply_all( v->get_array(), [ &p, i ]( value& v ){ if( auto* x = v.find( p[ i ].k ) ) { delete_recursive( x, p, i + 1 ); } } );
                   break;
-               case token::INDEX: {
-                  auto q = array_find( v->get_array(), p[ i ].i );
-                  delete_recursive( q.a.data() + q.n, p, i + 1 );
-               }  break;
+               case token::INDEX:
+                  array_apply( v->get_array(), p[ i ].i, [ i, &p ]( auto& a, const std::size_t n ){ delete_recursive( a.data() + n, p, i + 1 ); } );
+                  break;
                case token::APPEND:
                   throw std::runtime_error( "delete has append in key" );  // TODO: Or can we assert() here? Check the grammar.
             }

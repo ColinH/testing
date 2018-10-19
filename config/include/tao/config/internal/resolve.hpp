@@ -29,33 +29,41 @@ namespace tao
             if( i == p.size() ) {
                return v;
             }
-            const auto& a = v->get_array();
-            const auto s = a.size();
+            auto& a = v->get_array();
 
-            for( std::size_t j = 0; j < s; ++j ) {
-               const value& w = a[ s - j - 1 ];
-
-               assert( w.t != annotation::ADDITION );
-
-               if( w.t == annotation::REFERENCE ) {
-                  throw std::runtime_error( "resolve for get across phase two reference" );
-               }
-               switch( p[ i ].t ) {
-                  case token::KEY:
-                     if ( auto *x = w.find( p[ i ].k ) ) {
-                        return resolve_for_get( x, p, i + 1 );
-                     }
-                     break;
-                  case token::INDEX:
-                     if ( auto *x = array_find( w, p[ i ].i - array_size( a, s - j - 1 ) ) ) {
-                        return resolve_for_get( x, p, i + 1 );
-                     }
-                     break;
-                  case token::APPEND:
-                     throw std::runtime_error( "resolve for get has append in key" );
-               }
+            switch( p[ i ].t ) {
+               case token::NAME:
+                  return object_apply_last( a, p[ i ].k, [ i, &p ]( const value* v ){ return resolve_for_get( v, p, i + 1 ); } );
+               case token::INDEX:
+                  return array_apply( a, p[ i ].i, [ i, &p ]( auto& a, const std::size_t n ){ return resolve_for_get( a.data() + n, p, i + 1 ); } );
+               case token::APPEND:
+                  throw std::runtime_error( "resolve for get has append in key" );
             }
             return nullptr;
+         }
+
+         inline value* resolve_for_set( value* const v, const pointer& p, const std::size_t i );
+
+         inline value* resolve_for_set_append( std::vector< value >& a, const pointer& p, const std::size_t i )
+         {
+            if( a.empty() ) {
+               a.emplace_back( json::empty_array );  // TODO: Can this happen?
+            }
+            auto& b = a.back().get_array();
+            auto& c = b.emplace_back( json::empty_array );
+            c.t = annotation::ADDITION;
+            return resolve_for_set( &c, p, i + 1 );
+         }
+
+         inline value* resolve_for_set_insert( std::vector< value >& a, const pointer& p, const std::size_t i )
+         {
+            if( a.empty() ) {
+               a.emplace_back( json::empty_object );  // Can this happen?
+            }
+            auto& b = a.back().get_object();
+            auto d = b.emplace( p[ i ].k, json::empty_array );
+            d.first->second.t = annotation::ADDITION;
+            return resolve_for_set( &d.first->second, p, i + 1 );
          }
 
          inline value* resolve_for_set( value* const v, const pointer& p, const std::size_t i )
@@ -67,52 +75,20 @@ namespace tao
             if( i == p.size() ) {
                return v;
             }
-            auto& a = v->get_array();  // value_list
+            auto& a = v->get_array();
 
-            if( p[ i ].t == token::APPEND ) {
-               if( a.empty() ) {
-                  a.emplace_back( json::empty_array );  // array value
-               }
-               auto& b = a.back().get_array();
-               auto& c = b.emplace_back( json::empty_array );
-               c.t = annotation::ADDITION;
-               return resolve_for_set( &c, p, i + 1 );
+            switch( p[ i ].t ) {
+               case token::NAME:
+                  if( auto* x = object_apply_last( a, p[ i ].k, [ i, &p ]( value* v ){ return resolve_for_set( v, p, i + 1 ); }, nullptr ) ) {
+                     return x;
+                  }
+                  return resolve_for_set_insert( a, p, i );
+               case token::INDEX:
+                  return array_apply( a, p[ i ].i, [ i, &p ]( auto& a, const std::size_t n ){ return resolve_for_set( a.data() + n, p, i + 1 ); } );
+               case token::APPEND:
+                  return resolve_for_set_append( a, p, i );
             }
-            const auto s = a.size();
-
-            for( std::size_t j = 0; j < s; ++j ) {
-               value& w = a[ s - j - 1 ];
-
-               assert( w.t != annotation::ADDITION );
-
-               if( w.t == annotation::REFERENCE ) {
-                  throw std::runtime_error( "resolve for get across phase two reference" );
-               }
-               switch( p[ i ].t ) {
-                  case token::KEY:
-                     if ( auto* x = w.find( p[ i ].k ) ) {
-                        return resolve_for_set( x, p, i + 1 );
-                     }
-                     break;
-                  case token::INDEX:
-                     if( auto* x = array_find( w, p[ i ].i - array_size( a, s - j - 1 ) ) ) {
-                        return resolve_for_set( x, p, i + 1 );
-                     }
-                     break;
-                  case token::APPEND:
-                     assert( false );  // Handled above.
-               }
-            }
-            if( p[ i ].t == token::INDEX ) {
-               throw std::runtime_error( "resolve for get index not found" );
-            }
-            if( a.empty() ) {
-               a.emplace_back( json::empty_object );  // object value
-            }
-            auto& b = a.back().get_object();
-            auto d = b.emplace( p[ i ].k, json::empty_array );
-            d.first->second.t = annotation::ADDITION;
-            return resolve_for_set( &d.first->second, p, i + 1 );
+            assert( false );
          }
 
          inline const value& resolve_for_get( const value& v, const pointer& p )

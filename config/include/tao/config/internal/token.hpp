@@ -16,7 +16,7 @@ namespace tao
          {
             enum type
             {
-               KEY,
+               NAME,
                INDEX,
                APPEND
             };
@@ -32,9 +32,9 @@ namespace tao
             {
             }
 
-            token( const std::string& key )
-               : t( type::KEY ),
-                 k( key )
+            token( const std::string& name )
+               : t( type::NAME ),
+                 k( name )
             {
             }
 
