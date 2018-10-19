@@ -281,7 +281,7 @@ namespace tao
 
                const auto s = st.temp.get_string();
                st.temp = get_env( s );
-               // TODO: Set position.
+               st.temp.position.set_source( s );
             }
          };
 
@@ -312,7 +312,7 @@ namespace tao
 
                const auto s = st.temp.get_string();
                st.temp = read_file( s );
-               // TODO: Set position.
+               st.temp.position.set_source( s );
             }
          };
 

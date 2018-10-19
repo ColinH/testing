@@ -27,6 +27,29 @@ namespace tao
             using public_base = annotation;
          };
 
+         template<>
+         struct traits< annotation::type >
+         {
+            template< template< typename... > class Traits, typename Consumer >
+            static void produce( Consumer& c, const annotation::type t )
+            {
+               if( t == annotation::ADDITION ) {
+                  c.string( "ADDITION" );
+               }
+               else {
+                  c.string( "REFERENCE" );
+               }
+            }
+         };
+
+         template<>
+         struct traits< position >
+            : json::binding::object< TAO_JSON_BIND_REQUIRED( "source", &position::source ),
+                                     TAO_JSON_BIND_REQUIRED( "line", &position::line ),
+                                     TAO_JSON_BIND_REQUIRED( "byte_in_line", &position::byte_in_line ) >
+         {
+         };
+
       }  // namespace internal
 
    }  // namespace config

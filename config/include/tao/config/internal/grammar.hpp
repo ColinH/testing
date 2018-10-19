@@ -99,7 +99,6 @@ namespace tao
             struct number_value : pegtl::plus< pegtl::digit > {};
 
             struct value_part : pegtl::sor< null_s, true_s, false_s, array, object, extension, string_value, number_value > {};  // TODO: All the rest (binary, proper strings, proper numbers).
-            struct shell_part : pegtl::sor< null_s, true_s, false_s, array, object, string_value, number_value > {};  // TODO: All the rest (binary, proper strings, proper numbers).
 
             struct value_list : pegtl::list< value_part, plus, ws1 > {};
             struct value_plus : pegtl::list< value_part, plus, ws1 > {};
@@ -125,7 +124,7 @@ namespace tao
 
             struct grammar : pegtl::must< wss, grammar_list > {};
 
-            struct shell : pegtl::must< wss, shell_part, wss, pegtl::eof > {};
+            struct shell : pegtl::must< wss, value_part, wss, pegtl::eof > {};
 
          }  // namespace rules
 
