@@ -45,20 +45,25 @@ namespace tao
             struct true_s : pegtl::string< 't', 'r', 'u', 'e' > {};
             struct false_s : pegtl::string< 'f', 'a', 'l', 's', 'e' > {};
 
+            struct env_s : pegtl::string< 'e', 'n', 'v' > {};
             struct copy_s : pegtl::string< 'c', 'o', 'p', 'y' > {};
+            struct read_s : pegtl::string< 'r', 'e', 'a', 'd' > {};
             struct debug_s : pegtl::string< 'd', 'e', 'b', 'u', 'g' > {};
+            struct shell_s : pegtl::string< 's', 'h', 'e', 'l', 'l' > {};
+
             struct stderr_s : pegtl::string< 's', 't', 'd', 'e', 'r', 'r' > {};
-            struct stdout_s : pegtl::string< 's', 't', 'd', 'o', 'u', 't' > {};
             struct delete_s : pegtl::string< 'd', 'e', 'l', 'e', 't', 'e' > {};
             struct include_s : pegtl::string< 'i', 'n', 'c', 'l', 'u', 'd', 'e' > {};
+
+            struct identifier : pegtl::identifier {};  // TODO: More?
+
+            struct number_value : pegtl::plus< pegtl::digit > {};
 
             struct array;
             struct object;
             struct reference;
             struct value_list;
             struct value_part;
-
-            struct identifier : pegtl::identifier {};  // TODO: More?
 
             struct member_comma : pegtl::opt< comma, wss > {};
             struct element_comma : pegtl::opt< comma, wss > {};
@@ -78,13 +83,22 @@ namespace tao
 
             struct reference : pegtl::if_must< round_a, phase2_key, round_z > {};
 
-            struct number_value : pegtl::plus< pegtl::digit > {};
+            struct phase1_content : pegtl::star< pegtl::not_one< '"' > > {};  // TODO: Concatenation?
+            struct phase1_string : pegtl::if_must< quote_2, phase1_content, quote_2 > {};
 
+            struct env_value : pegtl::if_must< env_s, wsp, phase1_string > {};
             struct copy_value : pegtl::if_must< copy_s, wsp, phase1_key > {};
+            struct read_value : pegtl::if_must< read_s, wsp, phase1_string > {};
             struct debug_value : pegtl::if_must< debug_s, wsp, phase1_key > {};
-            struct at_value : pegtl::if_must< at, pegtl::sor< copy_value, debug_value > > {};
+            struct shell_value : pegtl::if_must< shell_s, wsp, phase1_string > {};
 
-            struct value_part : pegtl::sor< null_s, true_s, false_s, array, object, reference, at_value, number_value > {};  // TODO: All the rest (binary, strings, proper numbers).
+            struct immediate : pegtl::sor< env_value, copy_value, read_value, debug_value, shell_value > {};
+
+            struct at_immediate : pegtl::at< identifier, wsp > {};  // TODO: Enough?
+            struct extension : pegtl::if_must< round_a, pegtl::if_must_else< at_immediate, immediate, phase2_key >, round_z > {};
+
+            struct value_part : pegtl::sor< null_s, true_s, false_s, array, object, extension, number_value > {};  // TODO: All the rest (binary, strings, proper numbers).
+            struct shell_part : pegtl::sor< null_s, true_s, false_s, array, object, number_value > {};  // TODO: All the rest (binary, strings, proper numbers).
 
             struct value_list : pegtl::list< value_part, plus, ws1 > {};
             struct value_plus : pegtl::list< value_part, plus, ws1 > {};
@@ -92,14 +106,10 @@ namespace tao
             struct equal_member : pegtl::if_must< equals, wss, value_list > {};
             struct key_member : pegtl::if_must< member_key, wss, pegtl::sor< plus_member, equal_member > > {};
 
-            struct filename_content : pegtl::star< pegtl::not_one< '"' > > {};  // TODO: Escaping?
-            struct include_filename : pegtl::if_must< quote_2, filename_content, quote_2 > {};
-
             struct stderr_member: pegtl::if_must< stderr_s, wsp, phase1_key > {};
-            struct stdout_member: pegtl::if_must< stdout_s, wsp, phase1_key > {};
             struct delete_member : pegtl::if_must< delete_s, wsp, phase1_key > {};
-            struct include_member : pegtl::if_must< include_s, wsp, include_filename > {};
-            struct at_member : pegtl::if_must< at, pegtl::sor< include_member, delete_member, stderr_member, stdout_member > > {};
+            struct include_member : pegtl::if_must< include_s, wsp, phase1_string > {};
+            struct at_member : pegtl::if_must< at, pegtl::sor< include_member, delete_member, stderr_member > > {};
 
             struct member : pegtl::sor< at_member, key_member > {};
 
@@ -113,6 +123,8 @@ namespace tao
             struct object : pegtl::if_must< curly_a, wss, member_list > {};
 
             struct grammar : pegtl::must< wss, grammar_list > {};
+
+            struct shell : pegtl::must< wss, shell_part, wss, pegtl::eof > {};
 
          }  // namespace rules
 

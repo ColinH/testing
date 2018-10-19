@@ -88,6 +88,31 @@ namespace tao
             }
          };
 
+         template<>
+         struct control< rules::phase2_key >
+            : public pegtl::normal< rules::phase2_key >
+         {
+            template< typename Input >
+            static void start( const Input& in, state& st )
+            {
+               assert( !st.stack.empty() );
+               assert( st.stack.back()->t );
+               assert( st.stack.back()->is_array() );
+
+               st.stack.emplace_back( &st.stack.back()->get_array().emplace_back( json::empty_array ) );
+               st.stack.back()->t = annotation::REFERENCE;
+               st.stack.back()->position.set_position( in.position() );
+            }
+
+            template< typename Input >
+            static void success( const Input&, state& st )
+            {
+               assert( st.stack.size() > 1 );
+
+               st.stack.pop_back();
+            }
+         };
+
       }  // namespace internal
 
    }  // namespace config

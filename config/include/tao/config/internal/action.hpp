@@ -8,6 +8,7 @@
 #include "grammar.hpp"
 #include "pegtl.hpp"
 #include "state.hpp"
+#include "system.hpp"
 #include "to_stream.hpp"
 #include "utility.hpp"
 
@@ -137,22 +138,6 @@ namespace tao
          };
 
          template<>
-         struct action< rules::round_a >
-         {
-            template< typename Input >
-            static void apply( const Input& in, state& st )
-            {
-               assert( !st.stack.empty() );
-               assert( st.stack.back()->t );
-               assert( st.stack.back()->is_array() );
-
-               st.stack.emplace_back( &st.stack.back()->get_array().emplace_back( json::empty_array ) );
-               st.stack.back()->t = annotation::REFERENCE;
-               st.stack.back()->position.set_position( in.position() );
-            }
-         };
-
-         template<>
          struct action< rules::phase2_part >
          {
             static void apply0( state& st )
@@ -163,17 +148,6 @@ namespace tao
                   st.stack.back()->emplace_back( std::move( st.temp ) );
                   st.temp.discard();
                }
-            }
-         };
-
-         template<>
-         struct action< rules::round_z >
-         {
-            static void apply0( state& st )
-            {
-               assert( st.stack.size() > 1 );
-
-               st.stack.pop_back();
             }
          };
 
@@ -287,6 +261,29 @@ namespace tao
          };
 
          template<>
+         struct action< rules::phase1_content >
+         {
+            template< typename Input >
+            static void apply( const Input& in, state& st )
+            {
+               st.temp = in.string();  // TODO: Escaping.
+            }
+         };
+
+         template<>
+         struct action< rules::env_value >
+         {
+            static void apply0( state& st )
+            {
+               assert( !st.stack.empty() );
+               assert( st.stack.back()->t == annotation::ADDITION );
+               assert( st.stack.back()->is_array() );
+
+               st.temp = get_env( st.temp.get_string() );
+            }
+         };
+
+         template<>
          struct action< rules::copy_value >
          {
             static void apply0( state& st )
@@ -299,6 +296,19 @@ namespace tao
                auto& a = st.stack.back()->get_array();
                const auto& v = resolve_and_pop_for_get( st ).get_array();
                a.insert( a.end(), v.begin(), v.end() );
+            }
+         };
+
+         template<>
+         struct action< rules::read_value >
+         {
+            static void apply0( state& st )
+            {
+               assert( !st.stack.empty() );
+               assert( st.stack.back()->t == annotation::ADDITION );
+               assert( st.stack.back()->is_array() );
+
+               st.temp = read_file( st.temp.get_string() );
             }
          };
 
@@ -319,22 +329,30 @@ namespace tao
          };
 
          template<>
+         struct action< rules::shell_value >
+         {
+            template< typename Input >
+            static void apply( const Input& in, state& st )
+            {
+               assert( !st.stack.empty() );
+               assert( st.stack.back()->t == annotation::ADDITION );
+               assert( st.stack.back()->is_array() );
+
+               const auto c = st.temp.get_string();
+               st.temp.discard();
+               const auto s = shell_popen( c );
+               pegtl::memory_input i2( s, c );
+               pegtl::parse_nested< rules::shell, action, control >( in, i2, st );
+            }
+         };
+
+         template<>
          struct action< rules::stderr_member >
          {
             static void apply0( state& st )
             {
                to_stream( std::cerr, resolve_and_pop_for_get( st ), 3 );
                std::cerr << std::endl;
-            }
-         };
-
-         template<>
-         struct action< rules::stdout_member >
-         {
-            static void apply0( state& st )
-            {
-               to_stream( std::cout, resolve_and_pop_for_get( st ), 3 );
-               std::cout << std::endl;
             }
          };
 
@@ -350,12 +368,13 @@ namespace tao
          };
 
          template<>
-         struct action< rules::filename_content >
+         struct action< rules::include_member >
          {
             template< typename Input >
             static void apply( const Input& in, state& st )
             {
-               pegtl::file_input i2( in.string() );
+               pegtl::file_input i2( st.temp.get_string() );
+               st.temp.discard();
                pegtl::parse_nested< grammar, action, control >( in, i2, st );
             }
          };
