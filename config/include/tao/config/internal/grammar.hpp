@@ -82,10 +82,11 @@ namespace tao
 
             struct value_part : pegtl::sor< null_s, true_s, false_s, array, object, reference, at_value, number_value > {};  // TODO: All the rest (binary, strings, proper numbers).
 
-            struct value_plus : plus {};
-            struct value_list : pegtl::list< value_part, value_plus, ws1 > {};
-
-            struct key_member : pegtl::if_must< member_key, wss, equals, wss, value_list > {};  // TODO: plus_equals
+            struct value_list : pegtl::list< value_part, plus, ws1 > {};
+            struct value_plus : pegtl::list< value_part, plus, ws1 > {};
+            struct plus_member : pegtl::if_must< plus_equals, wss, value_plus > {};
+            struct equal_member : pegtl::if_must< equals, wss, value_list > {};
+            struct key_member : pegtl::if_must< member_key, wss, pegtl::sor< plus_member, equal_member > > {};
 
             struct filename_content : pegtl::star< pegtl::not_one< '"' > > {};  // TODO: Escaping?
             struct include_filename : pegtl::if_must< quote_2, filename_content, quote_2 > {};

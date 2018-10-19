@@ -49,6 +49,21 @@ namespace tao
          };
 
          template<>
+         struct control< rules::value_plus >
+            : public pegtl::normal< rules::value_plus >
+         {
+            template< typename Input >
+            static void start( const Input&, state& st )
+            {
+               assert( !st.stack.empty() );
+               assert( !st.stack.back()->t );
+               assert( st.stack.back()->is_object() );
+
+               st.stack.emplace_back( &resolve_and_pop_for_set( st ) );
+            }
+         };
+
+         template<>
          struct control< rules::value_list >
             : public pegtl::normal< rules::value_list >
          {

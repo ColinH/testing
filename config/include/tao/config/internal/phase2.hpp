@@ -3,9 +3,6 @@
 #ifndef TAO_CONFIG_INTERNAL_PHASE2_HPP
 #define TAO_CONFIG_INTERNAL_PHASE2_HPP
 
-#include <iostream>
-#include "to_stream.hpp"
-
 #include <utility>
 #include <vector>
 
@@ -107,15 +104,7 @@ namespace tao
          {
             // TODO: Protect against cycles (infinite recursion).
 
-            std::cout << "<<< START <<<" << std::endl;
-            to_stream( std::cout, v, 3 );
-            std::cout << std::endl << ">>> START >>>" << std::endl;
-
             phase2_generic( v, v );
-
-            std::cout << "<<< FINISH <<<" << std::endl;
-            to_stream( std::cout, v, 3 );
-            std::cout << std::endl << ">>> FINISH >>>" << std::endl;
          }
 
       }  // namespace internal

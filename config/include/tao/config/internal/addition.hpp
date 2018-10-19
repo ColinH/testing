@@ -11,6 +11,21 @@ namespace tao
    {
       namespace internal
       {
+         inline json::null_t null_addition( const std::vector< value >& a )
+         {
+            for( const auto& e : a ) {
+               assert( !e.t );
+
+               switch( e.type() ) {
+                  case json::type::NULL_:
+                     break;
+                  default:
+                     throw std::runtime_error( "inconsistent json types for null addition" );
+               }
+            }
+            return json::null;
+         }
+
          inline bool boolean_addition( const std::vector< value >& a )
          {
             bool result = false;
@@ -159,6 +174,8 @@ namespace tao
             assert( !a.empty() );
 
             switch( a[ 0 ].type() ) {
+               case json::type::NULL_:
+                  return value( null_addition( a ) );
                case json::type::ARRAY:
                   return value( array_addition( a ) );
                case json::type::OBJECT:

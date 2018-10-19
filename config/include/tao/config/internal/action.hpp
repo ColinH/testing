@@ -250,6 +250,17 @@ namespace tao
          };
 
          template<>
+         struct action< rules::value_plus >
+         {
+            static void apply0( state& st )
+            {
+               assert( st.stack.size() > 1 );
+
+               st.stack.pop_back();
+            }
+         };
+
+         template<>
          struct action< rules::value_list >
          {
             static void apply0( state& st )
