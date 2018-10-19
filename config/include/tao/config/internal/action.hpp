@@ -25,33 +25,39 @@ namespace tao
          template<>
          struct action< rules::null_s >
          {
-            static void apply0( state& st )
+            template< typename Input >
+            static void apply( const Input& in, state& st )
             {
                assert( st.temp.type() == json::type::DISCARDED );
 
                st.temp.unsafe_assign_null();
+               st.temp.position.set_position( in.position() );
             }
          };
 
          template<>
          struct action< rules::true_s >
          {
-            static void apply0( state& st )
+            template< typename Input >
+            static void apply( const Input& in, state& st )
             {
                assert( st.temp.type() == json::type::DISCARDED );
 
                st.temp.unsafe_assign_boolean( true );
+               st.temp.position.set_position( in.position() );
             }
          };
 
          template<>
          struct action< rules::false_s >
          {
-            static void apply0( state& st )
+            template< typename Input >
+            static void apply( const Input& in, state& st )
             {
                assert( st.temp.type() == json::type::DISCARDED );
 
                st.temp.unsafe_assign_boolean( false );
+               st.temp.position.set_position( in.position() );
             }
          };
 
@@ -64,6 +70,7 @@ namespace tao
                assert( st.temp.type() == json::type::DISCARDED );
 
                st.temp.unsafe_assign_unsigned( std::stoul( in.string() ) );
+               st.temp.position.set_position( in.position() );
             }
          };
 
@@ -111,6 +118,7 @@ namespace tao
                assert( st.temp.type() == json::type::DISCARDED );
 
                st.temp.unsafe_assign_string( in.string() );
+               st.temp.position.set_position( in.position() );
             }
          };
 
@@ -123,13 +131,15 @@ namespace tao
                assert( st.temp.type() == json::type::DISCARDED );
 
                st.temp.unsafe_assign_unsigned( std::stoul( in.string() ) );
+               st.temp.position.set_position( in.position() );
             }
          };
 
          template<>
          struct action< rules::round_a >
          {
-            static void apply0( state& st )
+            template< typename Input >
+            static void apply( const Input& in, state& st )
             {
                assert( !st.stack.empty() );
                assert( st.stack.back()->t );
@@ -137,6 +147,7 @@ namespace tao
 
                st.stack.emplace_back( &st.stack.back()->get_array().emplace_back( json::empty_array ) );
                st.stack.back()->t = annotation::REFERENCE;
+               st.stack.back()->position.set_position( in.position() );
             }
          };
 
@@ -168,22 +179,24 @@ namespace tao
          template<>
          struct action< rules::curly_a >
          {
-            static void apply0( state& st )
+            template< typename Input >
+            static void apply( const Input& in, state& st )
             {
-               begin_container< json::empty_object_t >( st );
+               begin_container< json::empty_object_t >( in, st );
             }
          };
 
          template<>
          struct action< rules::key_member >
          {
-            static void apply0( state& st )
+            template< typename Input >
+            static void apply( const Input& in, state& st )
             {
                if( st.temp.type() != json::type::DISCARDED ) {
                   assert( !st.temp.t );
                   assert( st.stack.size() > 1 );
 
-                  resolve_and_pop_for_set( st ).emplace_back( std::move( st.temp ) );
+                  resolve_and_pop_for_set( in, st ).emplace_back( std::move( st.temp ) );
                }
             }
          };
@@ -202,9 +215,10 @@ namespace tao
          template<>
          struct action< rules::square_a >
          {
-            static void apply0( state& st )
+            template< typename Input >
+            static void apply( const Input& in, state& st )
             {
-               begin_container< json::empty_array_t >( st );
+               begin_container< json::empty_array_t >( in, st );
             }
          };
 

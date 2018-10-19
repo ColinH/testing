@@ -16,6 +16,8 @@ namespace tao
          template< typename Consumer >
          void from_value( std::ostream& os, Consumer& consumer, const value& v )
          {
+            assert( !v.position.source().empty() );  // TODO: Remove this hack that checks whether a position was set everywhere.
+
             switch( v.type() ) {
                case json::type::UNINITIALIZED:
                   throw std::logic_error( "unable to produce events from uninitialized values" );  // NOLINT

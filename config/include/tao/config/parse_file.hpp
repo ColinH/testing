@@ -11,6 +11,7 @@
 #include "internal/pegtl.hpp"
 #include "internal/phase2.hpp"
 #include "internal/state.hpp"
+#include "internal/to_stream.hpp"
 #include "internal/value.hpp"
 
 namespace tao
@@ -20,14 +21,23 @@ namespace tao
       inline internal::value parse_file( const std::string& filename )
       {
          internal::state st;
+
          assert( st.stack.size() == 2 );
          assert( st.stack.front() == &st.result );
+
          json_pegtl::file_input in( filename );
+         st.result.position.set_position( in.position() );
+         st.stack.back()->position.set_position( in.position() );
          json_pegtl::parse< internal::grammar, internal::action, internal::control >( in, st );
+
          assert( st.stack.size() == 2 );
          assert( st.stack.front() == &st.result );
+
+         internal::to_stream( std::cout, st.result, 3 );
+         std::cout << std::endl;
+
          internal::phase2( st.result );
-         return std::move( st.result );  // TODO: Change type of result from config::internal::value to config::value...
+         return std::move( st.result );  // TODO: Change type of result from config::internal::value to config::value (or basic_value< user_traits >).
       }
 
    }  // namespace config

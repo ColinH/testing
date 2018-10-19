@@ -69,31 +69,35 @@ namespace tao
             return nullptr;
          }
 
-         inline value* resolve_for_set( value* const v, const pointer& p, const std::size_t i );
+         inline value* resolve_for_set( const pegtl::position& z, value* const v, const pointer& p, const std::size_t i );
 
-         inline value* resolve_for_set_append( std::vector< value >& a, const pointer& p, const std::size_t i )
+         inline value* resolve_for_set_append( const pegtl::position& z, std::vector< value >& a, const pointer& p, const std::size_t i )
          {
             if( a.empty() ) {
                a.emplace_back( json::empty_array );  // TODO: Can this happen?
+               a.back().position.set_position( z );
             }
             auto& b = a.back().get_array();
             auto& c = b.emplace_back( json::empty_array );
             c.t = annotation::ADDITION;
-            return resolve_for_set( &c, p, i + 1 );
+            c.position.set_position( z );
+            return resolve_for_set( z, &c, p, i + 1 );
          }
 
-         inline value* resolve_for_set_insert( std::vector< value >& a, const pointer& p, const std::size_t i )
+         inline value* resolve_for_set_insert( const pegtl::position& z, std::vector< value >& a, const pointer& p, const std::size_t i )
          {
             if( a.empty() ) {
                a.emplace_back( json::empty_object );  // Can this happen?
+               a.back().position.set_position( z );
             }
             auto& b = a.back().get_object();
             auto d = b.emplace( p[ i ].k, json::empty_array );
             d.first->second.t = annotation::ADDITION;
-            return resolve_for_set( &d.first->second, p, i + 1 );
+            d.first->second.position.set_position( z );
+            return resolve_for_set( z, &d.first->second, p, i + 1 );
          }
 
-         inline value* resolve_for_set( value* const v, const pointer& p, const std::size_t i )
+         inline value* resolve_for_set( const pegtl::position& z, value* const v, const pointer& p, const std::size_t i )
          {
             assert( v );
             assert( v->t == annotation::ADDITION );
@@ -106,14 +110,14 @@ namespace tao
 
             switch( p[ i ].t ) {
                case token::NAME:
-                  if( auto* x = object_apply_last( a, p[ i ].k, [ i, &p ]( value* v ){ return resolve_for_set( v, p, i + 1 ); }, nullptr ) ) {
+                  if( auto* x = object_apply_last( a, p[ i ].k, [ i, &p, &z ]( value* v ){ return resolve_for_set( z, v, p, i + 1 ); }, nullptr ) ) {
                      return x;
                   }
-                  return resolve_for_set_insert( a, p, i );
+                  return resolve_for_set_insert( z, a, p, i );
                case token::INDEX:
-                  return array_apply( a, p[ i ].i, [ i, &p ]( auto& a, const std::size_t n ){ return resolve_for_set( a.data() + n, p, i + 1 ); } );
+                  return array_apply( a, p[ i ].i, [ i, &p, &z ]( auto& a, const std::size_t n ){ return resolve_for_set( z, a.data() + n, p, i + 1 ); } );
                case token::APPEND:
-                  return resolve_for_set_append( a, p, i );
+                  return resolve_for_set_append( z, a, p, i );
             }
             assert( false );
          }
@@ -141,24 +145,15 @@ namespace tao
             throw std::runtime_error( "resolve and pop for get failure" );
          }
 
-         inline value& resolve_for_set( value& v, const pointer& p )
-         {
-            assert( !p.empty() );
-
-            if( auto* w = resolve_for_set( &v, p, 0 ) ) {
-               return *w;
-            }
-            throw std::runtime_error( "resolve for set failure" );
-         }
-
-         inline value& resolve_and_pop_for_set( state& st )
+         template< typename Input >
+         value& resolve_and_pop_for_set( const Input& in, state& st )
          {
             assert( st.stack.size() > 1 );
             assert( ( st.stack.size() & 1 ) == 0 );
             assert( !st.keys.empty() );
             assert( !st.keys.back().empty() );
 
-            if( auto* w = resolve_for_set( *( st.stack.end() - 2 ), st.keys.back(), 0 ) ) {
+            if( auto* w = resolve_for_set( in.position(), *( st.stack.end() - 2 ), st.keys.back(), 0 ) ) {
                st.keys.pop_back();
                return *w;
             }

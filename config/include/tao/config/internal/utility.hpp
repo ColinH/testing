@@ -91,14 +91,15 @@ namespace tao
             throw std::runtime_error( "phase one name not found" );
          }
 
-         template< typename T >
-         void begin_container( state& st )
+         template< typename T, typename Input >
+         void begin_container( const Input& in, state& st )
          {
             assert( !st.stack.empty() );
             assert( st.stack.back()->t == annotation::ADDITION );
             assert( st.stack.back()->is_array() );
 
             st.stack.emplace_back( &st.stack.back()->get_array().emplace_back( T{ 0 } ) );
+            st.stack.back()->position.set_position( in.position() );
          }
 
          inline token token_from_value( const value& v )

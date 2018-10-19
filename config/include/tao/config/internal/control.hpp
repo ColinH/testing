@@ -53,13 +53,13 @@ namespace tao
             : public pegtl::normal< rules::value_plus >
          {
             template< typename Input >
-            static void start( const Input&, state& st )
+            static void start( const Input& in, state& st )
             {
                assert( !st.stack.empty() );
                assert( !st.stack.back()->t );
                assert( st.stack.back()->is_object() );
 
-               st.stack.emplace_back( &resolve_and_pop_for_set( st ) );
+               st.stack.emplace_back( &resolve_and_pop_for_set( in, st ) );
             }
          };
 
@@ -68,7 +68,7 @@ namespace tao
             : public pegtl::normal< rules::value_list >
          {
             template< typename Input >
-            static void start( const Input&, state& st )
+            static void start( const Input& in, state& st )
             {
                assert( !st.stack.empty() );
                assert( !st.stack.back()->t );
@@ -78,12 +78,13 @@ namespace tao
                      st.stack.emplace_back( &st.stack.back()->get_array().emplace_back( json::empty_array ) );
                      break;
                   case json::type::OBJECT:
-                     st.stack.emplace_back( &( resolve_and_pop_for_set( st ) = json::empty_array ) );
+                     st.stack.emplace_back( &( resolve_and_pop_for_set( in, st ) = json::empty_array ) );
                      break;
                   default:
                      assert( false );
                }
                st.stack.back()->t = annotation::ADDITION;
+               st.stack.back()->position.set_position( in.position() );
             }
          };
 
