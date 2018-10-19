@@ -57,8 +57,6 @@ namespace tao
 
             struct identifier : pegtl::identifier {};  // TODO: More?
 
-            struct number_value : pegtl::plus< pegtl::digit > {};
-
             struct array;
             struct object;
             struct reference;
@@ -97,8 +95,11 @@ namespace tao
             struct at_immediate : pegtl::at< identifier, wsp > {};  // TODO: Enough?
             struct extension : pegtl::if_must< round_a, pegtl::if_must_else< at_immediate, immediate, phase2_key >, round_z > {};
 
-            struct value_part : pegtl::sor< null_s, true_s, false_s, array, object, extension, number_value > {};  // TODO: All the rest (binary, strings, proper numbers).
-            struct shell_part : pegtl::sor< null_s, true_s, false_s, array, object, number_value > {};  // TODO: All the rest (binary, strings, proper numbers).
+            struct string_value : phase1_string {};  // TODO...
+            struct number_value : pegtl::plus< pegtl::digit > {};
+
+            struct value_part : pegtl::sor< null_s, true_s, false_s, array, object, extension, string_value, number_value > {};  // TODO: All the rest (binary, proper strings, proper numbers).
+            struct shell_part : pegtl::sor< null_s, true_s, false_s, array, object, string_value, number_value > {};  // TODO: All the rest (binary, proper strings, proper numbers).
 
             struct value_list : pegtl::list< value_part, plus, ws1 > {};
             struct value_plus : pegtl::list< value_part, plus, ws1 > {};

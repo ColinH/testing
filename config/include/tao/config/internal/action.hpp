@@ -279,7 +279,9 @@ namespace tao
                assert( st.stack.back()->t == annotation::ADDITION );
                assert( st.stack.back()->is_array() );
 
-               st.temp = get_env( st.temp.get_string() );
+               const auto s = st.temp.get_string();
+               st.temp = get_env( s );
+               // TODO: Set position.
             }
          };
 
@@ -308,7 +310,9 @@ namespace tao
                assert( st.stack.back()->t == annotation::ADDITION );
                assert( st.stack.back()->is_array() );
 
-               st.temp = read_file( st.temp.get_string() );
+               const auto s = st.temp.get_string();
+               st.temp = read_file( s );
+               // TODO: Set position.
             }
          };
 
