@@ -11,7 +11,6 @@
 #include "internal/pegtl.hpp"
 #include "internal/phase2.hpp"
 #include "internal/state.hpp"
-#include "internal/to_stream.hpp"
 #include "internal/value.hpp"
 
 namespace tao
@@ -32,9 +31,6 @@ namespace tao
 
          assert( st.stack.size() == 2 );
          assert( st.stack.front() == &st.result );
-
-         internal::to_stream( std::cout, st.result, 3 );
-         std::cout << std::endl;
 
          internal::phase2( st.result );
          return std::move( st.result );  // TODO: Change type of result from config::internal::value to config::value (or basic_value< user_traits >).

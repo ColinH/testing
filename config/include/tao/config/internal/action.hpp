@@ -8,6 +8,7 @@
 #include "grammar.hpp"
 #include "pegtl.hpp"
 #include "state.hpp"
+#include "to_stream.hpp"
 #include "utility.hpp"
 
 namespace tao
@@ -298,6 +299,26 @@ namespace tao
                auto& a = st.stack.back()->get_array();
                const auto& v = resolve_and_pop_for_get( st ).get_array();
                a.insert( a.end(), v.begin(), v.end() );
+            }
+         };
+
+         template<>
+         struct action< rules::stderr_member >
+         {
+            static void apply0( state& st )
+            {
+               to_stream( std::cerr, resolve_and_pop_for_get( st ), 3 );
+               std::cerr << std::endl;
+            }
+         };
+
+         template<>
+         struct action< rules::stdout_member >
+         {
+            static void apply0( state& st )
+            {
+               to_stream( std::cout, resolve_and_pop_for_get( st ), 3 );
+               std::cout << std::endl;
             }
          };
 

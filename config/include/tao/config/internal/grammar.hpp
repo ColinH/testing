@@ -46,6 +46,8 @@ namespace tao
             struct false_s : pegtl::string< 'f', 'a', 'l', 's', 'e' > {};
 
             struct copy_s : pegtl::string< 'c', 'o', 'p', 'y' > {};
+            struct stderr_s : pegtl::string< 's', 't', 'd', 'e', 'r', 'r' > {};
+            struct stdout_s : pegtl::string< 's', 't', 'd', 'o', 'u', 't' > {};
             struct delete_s : pegtl::string< 'd', 'e', 'l', 'e', 't', 'e' > {};
             struct include_s : pegtl::string< 'i', 'n', 'c', 'l', 'u', 'd', 'e' > {};
 
@@ -91,9 +93,11 @@ namespace tao
             struct filename_content : pegtl::star< pegtl::not_one< '"' > > {};  // TODO: Escaping?
             struct include_filename : pegtl::if_must< quote_2, filename_content, quote_2 > {};
 
+            struct stderr_member: pegtl::if_must< stderr_s, wsp, phase1_key > {};
+            struct stdout_member: pegtl::if_must< stdout_s, wsp, phase1_key > {};
             struct delete_member : pegtl::if_must< delete_s, wsp, phase1_key > {};
             struct include_member : pegtl::if_must< include_s, wsp, include_filename > {};
-            struct at_member : pegtl::if_must< at, pegtl::sor< include_member, delete_member > > {};
+            struct at_member : pegtl::if_must< at, pegtl::sor< include_member, delete_member, stderr_member, stdout_member > > {};
 
             struct member : pegtl::sor< at_member, key_member > {};
 
