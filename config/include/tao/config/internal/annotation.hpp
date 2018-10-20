@@ -23,6 +23,8 @@ namespace tao
 
             std::optional< type > t;
             config::position position;
+
+            mutable bool phase2_recursion_marker = false;
          };
 
       }  // namespace internal

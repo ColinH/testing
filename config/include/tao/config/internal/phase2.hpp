@@ -54,6 +54,34 @@ namespace tao
             return resolve_for_get( r, p );
          }
 
+         class phase2_guard
+         {
+         public:
+            explicit
+            phase2_guard( const value& v )
+               : m_v( v )
+            {
+               if( m_v.phase2_recursion_marker ) {
+                  throw std::runtime_error( "recursion in phase 2 detected" );
+               }
+               m_v.phase2_recursion_marker = true;
+            }
+
+            ~phase2_guard()
+            {
+               m_v.phase2_recursion_marker = false;
+            }
+
+            phase2_guard( phase2_guard&& ) = delete;
+            phase2_guard( const phase2_guard& ) = delete;
+
+            void operator=( phase2_guard&& ) = delete;
+            void operator=( const phase2_guard& ) = delete;
+
+         private:
+            const value& m_v;
+         };
+
          template< template< typename... > class Traits >
          class phase2_impl
          {
@@ -66,6 +94,8 @@ namespace tao
 
             json::basic_value< Traits > regular( const value& v )
             {
+               const phase2_guard _( v );
+
                assert( !v.t );
 
                json::basic_value< Traits > t;
@@ -118,6 +148,8 @@ namespace tao
 
             json::basic_value< Traits > addition( const value& v )
             {
+               const phase2_guard _( v );
+
                assert( v.t == annotation::ADDITION );
 
                std::vector< json::basic_value< Traits > > t;
