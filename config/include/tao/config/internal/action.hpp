@@ -230,7 +230,38 @@ namespace tao
          };
 
          template<>
-         struct action< rules::value_plus >
+         struct action< rules::equals >
+         {
+            template< typename Input >
+            static void apply( const Input& in, state& st )
+            {
+               assert( !st.stack.empty() );
+               assert( !st.stack.back()->t );
+               assert( st.stack.back()->type() == json::type::OBJECT );
+
+               st.stack.emplace_back( &( resolve_and_pop_for_set( in, st ) = json::empty_array ) );
+               st.stack.back()->t = annotation::ADDITION;
+               st.stack.back()->set_position( in.position() );
+            }
+         };
+
+         template<>
+         struct action< rules::plus_equals >
+         {
+            template< typename Input >
+            static void apply( const Input& in, state& st )
+            {
+               assert( !st.stack.empty() );
+               assert( !st.stack.back()->t );
+               assert( st.stack.back()->is_object() );
+               assert( st.stack.back()->type() == json::type::OBJECT );
+
+               st.stack.emplace_back( &resolve_and_pop_for_set( in, st ) );
+            }
+         };
+
+         template<>
+         struct action< rules::element >
          {
             static void apply0( state& st )
             {

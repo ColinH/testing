@@ -49,46 +49,6 @@ namespace tao
          };
 
          template<>
-         struct control< rules::value_plus >
-            : public pegtl::normal< rules::value_plus >
-         {
-            template< typename Input >
-            static void start( const Input& in, state& st )
-            {
-               assert( !st.stack.empty() );
-               assert( !st.stack.back()->t );
-               assert( st.stack.back()->is_object() );
-
-               st.stack.emplace_back( &resolve_and_pop_for_set( in, st ) );
-            }
-         };
-
-         template<>
-         struct control< rules::value_list >
-            : public pegtl::normal< rules::value_list >
-         {
-            template< typename Input >
-            static void start( const Input& in, state& st )
-            {
-               assert( !st.stack.empty() );
-               assert( !st.stack.back()->t );
-
-               switch( st.stack.back()->type() ) {
-                  case json::type::ARRAY:
-                     st.stack.emplace_back( &st.stack.back()->emplace_back( json::empty_array ) );
-                     break;
-                  case json::type::OBJECT:
-                     st.stack.emplace_back( &( resolve_and_pop_for_set( in, st ) = json::empty_array ) );
-                     break;
-                  default:
-                     assert( false );
-               }
-               st.stack.back()->t = annotation::ADDITION;
-               st.stack.back()->set_position( in.position() );
-            }
-         };
-
-         template<>
          struct control< rules::phase2_key >
             : public pegtl::normal< rules::phase2_key >
          {
@@ -110,6 +70,23 @@ namespace tao
                assert( st.stack.size() > 1 );
 
                st.stack.pop_back();
+            }
+         };
+
+         template<>
+         struct control< rules::element >
+            : public pegtl::normal< rules::element >
+         {
+            template< typename Input >
+            static void start( const Input& in, state& st )
+            {
+               assert( !st.stack.empty() );
+               assert( !st.stack.back()->t );
+               assert( st.stack.back()->type() == json::type::ARRAY );
+
+               st.stack.emplace_back( &st.stack.back()->emplace_back( json::empty_array ) );
+               st.stack.back()->t = annotation::ADDITION;
+               st.stack.back()->set_position( in.position() );
             }
          };
 

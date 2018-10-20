@@ -104,21 +104,21 @@ namespace tao
             struct value_part : pegtl::sor< null_s, true_s, false_s, array, object, special_value, string_value, number_value > {};  // TODO: All the rest (binary, proper strings, proper numbers).
 
             struct value_list : pegtl::list< value_part, plus, ws1 > {};
-            struct value_plus : pegtl::list< value_part, plus, ws1 > {};
-            struct plus_member : pegtl::if_must< plus_equals, wss, value_plus > {};
-            struct equal_member : pegtl::if_must< equals, wss, value_list > {};
-            struct key_member : pegtl::if_must< member_key, wss, pegtl::sor< plus_member, equal_member > > {};
+            struct assign_member : pegtl::if_must< equals, wss, value_list > {};
+            struct append_member : pegtl::if_must< plus_equals, wss, value_list > {};
+            struct key_member : pegtl::if_must< member_key, wss, pegtl::sor< assign_member, append_member > > {};
 
             struct stderr_member: pegtl::if_must< stderr_s, wsp, phase1_key > {};
             struct delete_member : pegtl::if_must< delete_s, wsp, phase1_key > {};
             struct include_member : pegtl::if_must< include_s, wsp, phase1_string > {};
             struct ext_member : pegtl::if_must< round_a, pegtl::sor< include_member, delete_member, stderr_member >, round_z > {};
 
+            struct element : value_list {};
             struct member : pegtl::sor< ext_member, key_member > {};
 
             template< typename U > struct member_list_impl : pegtl::until< U, member, wss, opt_comma > {};
 
-            struct element_list : pegtl::until< square_z, value_list, wss, opt_comma > {};
+            struct element_list : pegtl::until< square_z, element, wss, opt_comma > {};
             struct member_list : member_list_impl< curly_z > {};
             struct grammar_list : member_list_impl< pegtl::eof > {};
 
