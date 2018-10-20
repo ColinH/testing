@@ -24,7 +24,7 @@ namespace tao
                result.prepare_array();
                stack.emplace_back( &result );
                result.t = annotation::ADDITION;
-               stack.emplace_back( &result.get_array().emplace_back( json::empty_object ) );
+               stack.emplace_back( &result.emplace_back( json::empty_object ) );
             }
 
             value temp;

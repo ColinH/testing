@@ -75,7 +75,7 @@ namespace tao
 
                switch( st.stack.back()->type() ) {
                   case json::type::ARRAY:
-                     st.stack.emplace_back( &st.stack.back()->get_array().emplace_back( json::empty_array ) );
+                     st.stack.emplace_back( &st.stack.back()->emplace_back( json::empty_array ) );
                      break;
                   case json::type::OBJECT:
                      st.stack.emplace_back( &( resolve_and_pop_for_set( in, st ) = json::empty_array ) );
@@ -99,7 +99,7 @@ namespace tao
                assert( st.stack.back()->t );
                assert( st.stack.back()->is_array() );
 
-               st.stack.emplace_back( &st.stack.back()->get_array().emplace_back( json::empty_array ) );
+               st.stack.emplace_back( &st.stack.back()->emplace_back( json::empty_array ) );
                st.stack.back()->t = annotation::REFERENCE;
                st.stack.back()->set_position( in.position() );
             }

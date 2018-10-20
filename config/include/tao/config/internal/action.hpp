@@ -168,7 +168,7 @@ namespace tao
             assert( st.stack.back()->t == annotation::ADDITION );
             assert( st.stack.back()->is_array() );
 
-            st.stack.emplace_back( &st.stack.back()->get_array().emplace_back( T{ 0 } ) );
+            st.stack.emplace_back( &st.stack.back()->emplace_back( T{ 0 } ) );
             st.stack.back()->set_position( in.position() );
          }
 
