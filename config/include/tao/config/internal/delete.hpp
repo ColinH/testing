@@ -20,9 +20,6 @@ namespace tao
       {
          inline void delete_final( value* const v, const token& t )
          {
-            assert( v );
-            assert( v->t == annotation::ADDITION );
-
             switch( t.t ) {
                case token::NAME:
                   object_apply_all( v->get_array(), [ &k = t.k ]( value& v ){ v.get_object().erase( k ); } );
@@ -68,10 +65,11 @@ namespace tao
          inline void delete_and_pop( state& st )
          {
             assert( !st.stack.empty() );
+            assert( ( st.stack.size() & 1 ) == 0 );
             assert( !st.keys.empty() );
             assert( !st.keys.back().empty() );
 
-            delete_recursive( st.stack.front(), st.keys.back(), 0 );  // TODO: Or start at *( st.stack.end() - 2 )?
+            delete_recursive( *( st.stack.end() - 2 ), st.keys.back(), 0 );
             st.keys.pop_back();
          }
 
