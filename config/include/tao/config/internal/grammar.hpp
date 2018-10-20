@@ -92,15 +92,15 @@ namespace tao
             struct parse_value : pegtl::if_must< parse_s, wsp, phase1_string > {};
             struct shell_value : pegtl::if_must< shell_s, wsp, phase1_string > {};
 
-            struct immediate : pegtl::sor< env_value, copy_value, read_value, debug_value, shell_value > {};  // TODO: Keep this all here, or unify syntax and delegate to a run-time map later?
+            struct ext_value : pegtl::sor< env_value, copy_value, read_value, debug_value, shell_value > {};  // TODO: Keep this all here, or unify syntax and delegate to a run-time map later?
 
-            struct at_immediate : pegtl::at< identifier, wsp > {};  // TODO: Enough?
-            struct extension : pegtl::if_must< round_a, pegtl::if_must_else< at_immediate, immediate, phase2_key >, round_z > {};
+            struct if_at : pegtl::at< identifier, wsp > {};  // TODO: Enough?
+            struct special_value : pegtl::if_must< round_a, pegtl::if_must_else< if_at, ext_value, phase2_key >, round_z > {};
 
             struct string_value : phase1_string {};  // TODO...
             struct number_value : pegtl::plus< pegtl::digit > {};
 
-            struct value_part : pegtl::sor< null_s, true_s, false_s, array, object, extension, string_value, number_value > {};  // TODO: All the rest (binary, proper strings, proper numbers).
+            struct value_part : pegtl::sor< null_s, true_s, false_s, array, object, special_value, string_value, number_value > {};  // TODO: All the rest (binary, proper strings, proper numbers).
 
             struct value_list : pegtl::list< value_part, plus, ws1 > {};
             struct value_plus : pegtl::list< value_part, plus, ws1 > {};
@@ -111,9 +111,9 @@ namespace tao
             struct stderr_member: pegtl::if_must< stderr_s, wsp, phase1_key > {};
             struct delete_member : pegtl::if_must< delete_s, wsp, phase1_key > {};
             struct include_member : pegtl::if_must< include_s, wsp, phase1_string > {};
-            struct at_member : pegtl::if_must< at, pegtl::sor< include_member, delete_member, stderr_member > > {};
+            struct ext_member : pegtl::if_must< round_a, pegtl::sor< include_member, delete_member, stderr_member >, round_z > {};
 
-            struct member : pegtl::sor< at_member, key_member > {};
+            struct member : pegtl::sor< ext_member, key_member > {};
 
             template< typename U > struct member_list_impl : pegtl::until< U, member, wss, member_comma > {};
 
