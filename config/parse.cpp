@@ -9,6 +9,8 @@ int main( int argc, char** argv )
       const auto v = tao::config::parse_file( argv[ i ] );
       tao::json::jaxn::to_stream( std::cout, v, 3 );
       std::cout << std::endl;
+      tao::config::to_stream( std::cout, v, 3 );
+      std::cout << std::endl;
    }
    return 0;
 }

@@ -13,6 +13,23 @@ namespace tao
       {
          config::pointer pointer;
          config::position position;
+
+         // TODO: Can we use binding::object without these functions?
+
+         std::size_t line() const noexcept
+         {
+            return position.line();
+         }
+
+         std::size_t byte_in_line() const noexcept
+         {
+            return position.byte_in_line();
+         }
+
+         const std::string& source() const noexcept
+         {
+            return position.source();
+         }
       };
 
    }  // namespace config

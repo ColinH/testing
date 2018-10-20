@@ -7,5 +7,6 @@
 
 #include "config/check_file.hpp"
 #include "config/parse_file.hpp"
+#include "config/to_stream.hpp"
 
 #endif

@@ -25,8 +25,8 @@ namespace tao
             assert( st.stack.front() == &st.result );
 
             json_pegtl::file_input in( filename );
-            st.result.position.set_position( in.position() );
-            st.stack.back()->position.set_position( in.position() );
+            st.result.set_position( in.position() );
+            st.stack.back()->set_position( in.position() );
             json_pegtl::parse< grammar, action, control >( in, st );
 
             assert( st.stack.size() == 2 );

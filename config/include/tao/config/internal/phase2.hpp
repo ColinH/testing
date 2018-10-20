@@ -142,7 +142,7 @@ namespace tao
                      std::cerr << json::to_string( v.type() ) << std::endl;
                      throw std::runtime_error( "invalid json type in phase two" );
                }
-               t.position = v.position;  // TODO: Will we need this?
+               //               t.position = v.position;  // TODO: Will we need this?
                return t;
             }
 
@@ -168,7 +168,7 @@ namespace tao
                }
                auto r = value_addition( t );
                r.pointer = m_stack;
-               r.position = v.position;  // TODO: Let's see how often this is wrong...
+               //               r.position = v.position;  // TODO: Let's see how often this is wrong...
                return r;
             }
 
@@ -181,8 +181,6 @@ namespace tao
          template< template< typename... > class Traits >
          json::basic_value< Traits > phase2( const value& v )
          {
-            // TODO: Protect against cycles (infinite recursion) -- set? counter? annotation?
-
             return phase2_impl< Traits >( v ).addition( v );
          }
 

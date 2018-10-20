@@ -84,7 +84,7 @@ namespace tao
                      assert( false );
                }
                st.stack.back()->t = annotation::ADDITION;
-               st.stack.back()->position.set_position( in.position() );
+               st.stack.back()->set_position( in.position() );
             }
          };
 
@@ -101,7 +101,7 @@ namespace tao
 
                st.stack.emplace_back( &st.stack.back()->get_array().emplace_back( json::empty_array ) );
                st.stack.back()->t = annotation::REFERENCE;
-               st.stack.back()->position.set_position( in.position() );
+               st.stack.back()->set_position( in.position() );
             }
 
             template< typename Input >

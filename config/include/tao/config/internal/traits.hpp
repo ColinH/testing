@@ -43,11 +43,13 @@ namespace tao
          };
 
          template<>
-         struct traits< position >
-            : json::binding::object< TAO_JSON_BIND_REQUIRED( "source", &position::source ),
-                                     TAO_JSON_BIND_REQUIRED( "line", &position::line ),
-                                     TAO_JSON_BIND_REQUIRED( "byte_in_line", &position::byte_in_line ) >
+         struct traits< annotation >
+            : public json::binding::object< TAO_JSON_BIND_REQUIRED( "source", &annotation::source ),
+                                            TAO_JSON_BIND_REQUIRED( "line", &annotation::line ),
+                                            TAO_JSON_BIND_REQUIRED( "byte_in_line", &annotation::byte_in_line ),
+                                            TAO_JSON_BIND_OPTIONAL( "kind", &annotation::t )>
          {
+            TAO_JSON_DEFAULT_KEY( "meta" );
          };
 
       }  // namespace internal

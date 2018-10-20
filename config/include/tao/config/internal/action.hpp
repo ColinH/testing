@@ -32,7 +32,7 @@ namespace tao
                assert( st.temp.type() == json::type::DISCARDED );
 
                st.temp.unsafe_assign_null();
-               st.temp.position.set_position( in.position() );
+               st.temp.set_position( in.position() );
             }
          };
 
@@ -45,7 +45,7 @@ namespace tao
                assert( st.temp.type() == json::type::DISCARDED );
 
                st.temp.unsafe_assign_boolean( true );
-               st.temp.position.set_position( in.position() );
+               st.temp.set_position( in.position() );
             }
          };
 
@@ -58,7 +58,7 @@ namespace tao
                assert( st.temp.type() == json::type::DISCARDED );
 
                st.temp.unsafe_assign_boolean( false );
-               st.temp.position.set_position( in.position() );
+               st.temp.set_position( in.position() );
             }
          };
 
@@ -71,7 +71,7 @@ namespace tao
                assert( st.temp.type() == json::type::DISCARDED );
 
                st.temp.unsafe_assign_unsigned( std::stoul( in.string() ) );
-               st.temp.position.set_position( in.position() );
+               st.temp.set_position( in.position() );
             }
          };
 
@@ -130,7 +130,7 @@ namespace tao
                assert( st.temp.type() == json::type::DISCARDED );
 
                st.temp.unsafe_assign_string( in.string() );
-               st.temp.position.set_position( in.position() );
+               st.temp.set_position( in.position() );
             }
          };
 
@@ -143,7 +143,7 @@ namespace tao
                assert( st.temp.type() == json::type::DISCARDED );
 
                st.temp.unsafe_assign_unsigned( std::stoul( in.string() ) );
-               st.temp.position.set_position( in.position() );
+               st.temp.set_position( in.position() );
             }
          };
 
@@ -169,7 +169,7 @@ namespace tao
             assert( st.stack.back()->is_array() );
 
             st.stack.emplace_back( &st.stack.back()->get_array().emplace_back( T{ 0 } ) );
-            st.stack.back()->position.set_position( in.position() );
+            st.stack.back()->set_position( in.position() );
          }
 
          template<>
@@ -302,7 +302,7 @@ namespace tao
 
                const auto s = st.temp.get_string();
                st.temp = get_env( s );
-               st.temp.position.set_source( s );
+               st.temp.source = s;
             }
          };
 
@@ -333,7 +333,7 @@ namespace tao
 
                const auto s = st.temp.get_string();
                st.temp = read_file( s );
-               st.temp.position.set_source( s );
+               st.temp.source = s;
             }
          };
 

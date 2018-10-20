@@ -79,12 +79,12 @@ namespace tao
          {
             if( a.empty() ) {
                a.emplace_back( json::empty_array );  // TODO: Can this happen?
-               a.back().position.set_position( z );
+               a.back().set_position( z );
             }
             auto& b = a.back().get_array();
             auto& c = b.emplace_back( json::empty_array );
             c.t = annotation::ADDITION;
-            c.position.set_position( z );
+            c.set_position( z );
             return resolve_for_set( z, &c, p, i + 1 );
          }
 
@@ -92,12 +92,12 @@ namespace tao
          {
             if( a.empty() ) {
                a.emplace_back( json::empty_object );  // Can this happen?
-               a.back().position.set_position( z );
+               a.back().set_position( z );
             }
             auto& b = a.back().get_object();
             auto d = b.emplace( p[ i ].k, json::empty_array );
             d.first->second.t = annotation::ADDITION;
-            d.first->second.position.set_position( z );
+            d.first->second.set_position( z );
             return resolve_for_set( z, &d.first->second, p, i + 1 );
          }
 
