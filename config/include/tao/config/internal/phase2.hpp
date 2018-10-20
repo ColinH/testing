@@ -124,6 +124,7 @@ namespace tao
                const phase2_guard _( v );
 
                assert( !v.t );
+               assert( !v.source.empty() );
 
                json::basic_value< Traits > t;
 
@@ -174,6 +175,7 @@ namespace tao
                const phase2_guard _( v );
 
                assert( v.t == annotation::ADDITION );
+               assert( !v.source.empty() );
 
                std::vector< json::basic_value< Traits > > t;
 

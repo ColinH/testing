@@ -1,7 +1,6 @@
 // Copyright (c) 2018 Dr. Colin Hirsch
 
 #include <tao/config.hpp>
-#include <tao/config/internal/to_stream.hpp>
 
 int main( int argc, char** argv )
 {

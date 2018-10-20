@@ -288,6 +288,7 @@ namespace tao
             static void apply( const Input& in, state& st )
             {
                st.temp = in.string();  // TODO: Escaping...
+               st.temp.set_position( in.position() );
             }
          };
 
@@ -302,7 +303,9 @@ namespace tao
 
                const auto s = st.temp.get_string();
                st.temp = get_env( s );
-               st.temp.source = s;
+               st.temp.source = "$" + s;
+               st.temp.line = 0;
+               st.temp.byte_in_line = 0;
             }
          };
 
@@ -334,6 +337,8 @@ namespace tao
                const auto s = st.temp.get_string();
                st.temp = read_file( s );
                st.temp.source = s;
+               st.temp.line = 0;
+               st.temp.byte_in_line = 0;
             }
          };
 
@@ -348,8 +353,12 @@ namespace tao
                assert( st.temp.type() == json::type::DISCARDED );
 
                std::ostringstream o;
-               to_stream( o, resolve_and_pop_for_get( st ) );
+               const auto& v = resolve_and_pop_for_get( st );
+               to_stream( o, v );
                st.temp.unsafe_assign_string( o.str() );
+               st.temp.source = v.source;
+               st.temp.line = v.line;
+               st.temp.byte_in_line = v.byte_in_line;
             }
          };
 

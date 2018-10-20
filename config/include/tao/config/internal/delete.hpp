@@ -28,7 +28,7 @@ namespace tao
                   array_apply_one( v->get_array(), t.i, []( auto& a, const std::size_t n ){ a.erase( a.begin() + n ); } );
                   break;
                case token::MULTI:
-                  container_apply_all( v->get_array(), []( value& v ){ if( v.is_array() ){ v = json::empty_array; } else if( v.is_object() ) { v = json::empty_object; } else { assert( false ); } } );
+                  container_apply_all( v->get_array(), []( value& v ){ if( v.is_array() ){ v.unsafe_get_array().clear(); } else if( v.is_object() ) { v.unsafe_get_object().clear(); } else { assert( false ); } } );
                   break;
                case token::APPEND:
                   array_apply_last( v->get_array(), []( auto& a, const std::size_t n ){ a.erase( a.begin() + n ); } );
