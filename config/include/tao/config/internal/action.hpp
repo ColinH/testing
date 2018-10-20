@@ -183,21 +183,6 @@ namespace tao
          };
 
          template<>
-         struct action< rules::key_member >
-         {
-            template< typename Input >
-            static void apply( const Input& in, state& st )
-            {
-               if( st.temp.type() != json::type::DISCARDED ) {
-                  assert( !st.temp.t );
-                  assert( st.stack.size() > 1 );
-
-                  resolve_and_pop_for_set( in, st ).emplace_back( std::move( st.temp ) );
-               }
-            }
-         };
-
-         template<>
          struct action< rules::curly_z >
          {
             static void apply0( state& st )
@@ -215,21 +200,6 @@ namespace tao
             static void apply( const Input& in, state& st )
             {
                begin_container< json::empty_array_t >( in, st );
-            }
-         };
-
-         template<>
-         struct action< rules::element_comma >
-         {
-            static void apply0( state& st )
-            {
-               if( st.temp.type() != json::type::DISCARDED ) {
-                  assert( !st.temp.t );
-                  assert( st.stack.size() > 1 );
-
-                  st.stack.back()->emplace_back( std::move( st.temp ) );
-                  st.temp.discard();
-               }
             }
          };
 

@@ -20,29 +20,30 @@ namespace tao
       {
          // All resolve functions return a pointer to the array representing the value addition.
 
-         inline const value* resolve_for_get( const value* const v, const pointer& p, const std::size_t i )
+         template< typename F >
+         inline auto resolve_for_get( const value* const v, const pointer& p, const F& f, const std::size_t i )
          {
             assert( v );
             assert( v->t );
             assert( i <= p.size() );
 
             if( i == p.size() ) {
-               return v;
+               return f( *v );
             }
             if( v->t == annotation::REFERENCE ) {
                throw std::runtime_error( "resolve across reference" );
             }
             switch( p[ i ].t ) {
                case token::NAME:
-                  return object_apply_last( v, p[ i ].k, [ i, &p ]( const value* v ){ return resolve_for_get( v, p, i + 1 ); } );
+                  return object_apply_last( v, p[ i ].k, [ i, &p, &f ]( const value* v ){ return resolve_for_get( v, p, f, i + 1 ); } );
                case token::INDEX:
-                  return array_apply_one( v, p[ i ].i, [ i, &p ]( auto& a, const std::size_t n ){ return resolve_for_get( a.data() + n, p, i + 1 ); } );
+                  return array_apply_one( v, p[ i ].i, [ i, &p, &f ]( auto& a, const std::size_t n ){ return resolve_for_get( a.data() + n, p, f, i + 1 ); } );
                case token::MULTI:
                   throw std::runtime_error( "resolve for get has '*' in key" );
                case token::APPEND:
-                  return array_apply_last( v, [ i, &p ]( auto& a, const std::size_t n ){ return resolve_for_get( a.data() + n, p, i + 1 ); } );
+                  return array_apply_last( v, [ i, &p, &f ]( auto& a, const std::size_t n ){ return resolve_for_get( a.data() + n, p, f, i + 1 ); } );
             }
-            return nullptr;
+            assert( false );
          }
 
          inline value* resolve_for_set( const pegtl::position& z, value* const v, const pointer& p, const std::size_t i );
@@ -102,7 +103,7 @@ namespace tao
          {
             assert( !p.empty() );
 
-            if( const auto* w = resolve_for_get( &v, p, 0 ) ) {
+            if( const auto* w = resolve_for_get( &v, p, []( const value& v ){ return &v; }, 0 ) ) {
                return *w;
             }
             throw std::runtime_error( "resolve for get failure" );
@@ -114,7 +115,7 @@ namespace tao
             assert( !st.keys.empty() );
             assert( !st.keys.back().empty() );
 
-            if( const auto* w = resolve_for_get( st.stack.front(), st.keys.back(), 0 ) ) {
+            if( const auto* w = resolve_for_get( st.stack.front(), st.keys.back(), []( const value& v ){ return &v; }, 0 ) ) {
                st.keys.pop_back();
                return *w;
             }

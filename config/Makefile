@@ -10,7 +10,11 @@ BINARIES := $(SOURCES:%.cpp=build/%)
 TESTFILES := $(shell find unit_tests -name '*.config')
 TESTCASES := $(TESTFILES:%.config=%)
 
-all: $(BINARIES)
+.PHONY: all test
+
+all: test $(BINARIES)
+
+test: build/unit_tests/unit_tests
 	build/unit_tests/unit_tests $(TESTCASES)
 
 build/%.d: %.cpp Makefile

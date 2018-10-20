@@ -65,8 +65,7 @@ namespace tao
             struct value_list;
             struct value_part;
 
-            struct member_comma : pegtl::opt< comma, wss > {};
-            struct element_comma : pegtl::opt< comma, wss > {};
+            struct opt_comma : pegtl::opt< comma, wss > {};
 
             struct phase1_name : identifier {};
             struct phase1_index : pegtl::plus< pegtl::digit > {};
@@ -117,9 +116,9 @@ namespace tao
 
             struct member : pegtl::sor< ext_member, key_member > {};
 
-            template< typename U > struct member_list_impl : pegtl::until< U, member, wss, member_comma > {};
+            template< typename U > struct member_list_impl : pegtl::until< U, member, wss, opt_comma > {};
 
-            struct element_list : pegtl::until< square_z, value_list, wss, element_comma > {};
+            struct element_list : pegtl::until< square_z, value_list, wss, opt_comma > {};
             struct member_list : member_list_impl< curly_z > {};
             struct grammar_list : member_list_impl< pegtl::eof > {};
 
