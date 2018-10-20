@@ -103,10 +103,7 @@ namespace tao
          {
             assert( !p.empty() );
 
-            if( const auto* w = resolve_for_get( &v, p, []( const value& v ){ return &v; }, 0 ) ) {
-               return *w;
-            }
-            throw std::runtime_error( "resolve for get failure" );
+            return *resolve_for_get( &v, p, []( const value& v ){ return &v; }, 0 );
          }
 
          inline const value& resolve_and_pop_for_get( state& st )
@@ -115,11 +112,10 @@ namespace tao
             assert( !st.keys.empty() );
             assert( !st.keys.back().empty() );
 
-            if( const auto* w = resolve_for_get( st.stack.front(), st.keys.back(), []( const value& v ){ return &v; }, 0 ) ) {
-               st.keys.pop_back();
-               return *w;
-            }
-            throw std::runtime_error( "resolve and pop for get failure" );
+            const auto* w = resolve_for_get( st.stack.front(), st.keys.back(), []( const value& v ){ return &v; }, 0 );
+            assert( w );
+            st.keys.pop_back();
+            return *w;
          }
 
          template< typename Input >
@@ -130,11 +126,10 @@ namespace tao
             assert( !st.keys.empty() );
             assert( !st.keys.back().empty() );
 
-            if( auto* w = resolve_for_set( in.position(), *( st.stack.end() - 2 ), st.keys.back(), 0 ) ) {
-               st.keys.pop_back();
-               return *w;
-            }
-            throw std::runtime_error( "these messages need a lot of improvement" );
+            auto* w = resolve_for_set( in.position(), *( st.stack.end() - 2 ), st.keys.back(), 0 );
+            assert( w );
+            st.keys.pop_back();
+            return *w;
          }
 
       }  // namespace internal
