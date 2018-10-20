@@ -92,6 +92,33 @@ namespace tao
             {
             }
 
+            json::basic_value< Traits > phase2()
+            {
+               json::basic_value< Traits > r = addition( m_root );
+               pointers( r, config::pointer() );
+               return r;
+            }
+
+         private:
+            void pointers( json::basic_value< Traits >& r, const config::pointer& p )
+            {
+               switch( r.type() ) {
+                  case json::type::ARRAY:
+                     for( std::size_t i = 0; i < r.unsafe_get_array().size(); ++i ) {
+                        pointers( r[ i ], p + i );
+                     }
+                     break;
+                  case json::type::OBJECT:
+                     for( auto& i : r.unsafe_get_object() ) {
+                        pointers( i.second, p + i.first );
+                     }
+                     break;
+                  default:
+                     break;
+               }
+               r.pointer = p;
+            }
+
             json::basic_value< Traits > regular( const value& v )
             {
                const phase2_guard _( v );
@@ -124,18 +151,14 @@ namespace tao
                      break;
                   case json::type::ARRAY:
                      t.prepare_array();
-                     for( std::size_t i = 0; i < v.unsafe_get_array().size(); ++i ) {
-                        m_stack.push_back( i );
-                        t.emplace_back( addition( v.unsafe_get_array()[ i ] ) );
-                        m_stack.pop_back();
+                     for( auto& i : v.unsafe_get_array() ) {
+                        t.emplace_back( addition( i ) );
                      }
                      break;
                   case json::type::OBJECT:
                      t.prepare_object();
                      for( auto& i : v.unsafe_get_object() ) {
-                        m_stack.push_back( i.first );
                         t.emplace( i.first, addition( i.second ) );
-                        m_stack.pop_back();
                      }
                      break;
                   default:
@@ -167,21 +190,18 @@ namespace tao
                   }
                }
                auto r = value_addition( t );
-               r.pointer = m_stack;
                //               r.position = v.position;  // TODO: Let's see how often this is wrong...
                return r;
             }
 
          private:
-            config::pointer m_stack;
-
             const value& m_root;
          };
 
          template< template< typename... > class Traits >
          json::basic_value< Traits > phase2( const value& v )
          {
-            return phase2_impl< Traits >( v ).addition( v );
+            return phase2_impl< Traits >( v ).phase2();
          }
 
       }  // namespace internal
