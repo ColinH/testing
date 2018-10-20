@@ -30,9 +30,11 @@ namespace tao
          }
 
          template< typename A, typename F >
-         auto array_apply_one( A& a, std::size_t n, const F& f )
+         auto array_apply_one( A* a, std::size_t n, const F& f )
          {
-            for( auto& v : a ) {
+            assert( a->t == annotation::ADDITION );
+
+            for( auto& v : a->get_array() ) {
                if( v.t ) {
                   assert( v.t == annotation::REFERENCE );
                   throw std::runtime_error( "phase one across phase two reference" );
@@ -51,9 +53,13 @@ namespace tao
             throw std::runtime_error( "phase one array out of bounds" );
          }
 
-         template< typename A, typename F >
-         auto array_apply_last( A& a, const F& f )
+         template< typename B, typename F >
+         auto array_apply_last( B* b, const F& f )
          {
+            assert( b->t == annotation::ADDITION );
+
+            auto& a = b->get_array();
+
             for( std::size_t j = 0; j < a.size(); ++j ) {
                const std::size_t i = a.size() - j - 1;
                auto& v = a[ i ];
@@ -75,9 +81,11 @@ namespace tao
          }
 
          template< typename A, typename F >
-         void object_apply_all( A& a, const F& f )
+         void object_apply_all( A* a, const F& f )
          {
-            for( auto& v : a ) {
+            assert( a->t == annotation::ADDITION );
+
+            for( auto& v : a->get_array() ) {
                if( v.t ) {
                   assert( v.t == annotation::REFERENCE );
                   throw std::runtime_error( "phase one across phase two reference" );
@@ -89,9 +97,13 @@ namespace tao
             }
          }
 
-         template< typename A, typename F >
-         auto object_apply_last( A& a, const std::string& k, const F& f, const std::nullptr_t )
+         template< typename B, typename F >
+         auto object_apply_last( B* b, const std::string& k, const F& f, const std::nullptr_t )
          {
+            assert( b->t == annotation::ADDITION );
+
+            auto& a = b->get_array();
+
             for( std::size_t j = 0; j < a.size(); ++j ) {
                auto& w = a[ a.size() - j - 1 ];
                if( w.t ) {
@@ -115,9 +127,11 @@ namespace tao
          }
 
          template< typename A, typename F >
-         void container_apply_all( A& a, const F& f )
+         void container_apply_all( A* a, const F& f )
          {
-            for( auto& v : a ) {
+            assert( a->t == annotation::ADDITION );
+
+            for( auto& v : a->get_array() ) {
                if( v.t ) {
                   assert( v.t == annotation::REFERENCE );
                   throw std::runtime_error( "phase one across phase two reference" );
@@ -135,9 +149,11 @@ namespace tao
          }
 
          template< typename A, typename F >
-         void container_apply_all_all( A& a, const F& f )
+         void container_apply_all_all( A* a, const F& f )
          {
-            for( auto& v : a ) {
+            assert( a->t == annotation::ADDITION );
+
+            for( auto& v : a->get_array() ) {
                if( v.t ) {
                   assert( v.t == annotation::REFERENCE );
                   throw std::runtime_error( "phase one across phase two reference" );

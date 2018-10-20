@@ -20,55 +20,27 @@ namespace tao
       {
          // All resolve functions return a pointer to the array representing the value addition.
 
-         inline const value* resolve_for_get( const value* const v, const pointer& p, const std::size_t i );
-
-         inline const value* resolve_for_get_value( const value* const v, const pointer& p, const std::size_t i )
-         {
-            assert( v );
-            assert( !v->t );
-            assert( i <= p.size() );
-
-            if( i == p.size() ) {
-               return v;
-            }
-            switch( p[ i ].t ) {
-               case token::NAME:
-                  return resolve_for_get( &v->at( p[ i ].k ), p, i + 1 );
-               case token::INDEX:
-                  return resolve_for_get( &v->at( p[ i ].i ), p, i + 1 );
-               case token::MULTI:
-                  throw std::runtime_error( "resolve for get has '*' in key" );
-               case token::APPEND:
-                  throw std::runtime_error( "resolve for get has '-' in key" );
-            }
-            assert( false );
-         }
-
          inline const value* resolve_for_get( const value* const v, const pointer& p, const std::size_t i )
          {
             assert( v );
+            assert( v->t );
             assert( i <= p.size() );
 
             if( i == p.size() ) {
                return v;
-            }
-            if( !v->t ) {
-               return resolve_for_get_value( v, p, i );
             }
             if( v->t == annotation::REFERENCE ) {
                throw std::runtime_error( "resolve across reference" );
             }
-            auto& a = v->get_array();
-
             switch( p[ i ].t ) {
                case token::NAME:
-                  return object_apply_last( a, p[ i ].k, [ i, &p ]( const value* v ){ return resolve_for_get( v, p, i + 1 ); } );
+                  return object_apply_last( v, p[ i ].k, [ i, &p ]( const value* v ){ return resolve_for_get( v, p, i + 1 ); } );
                case token::INDEX:
-                  return array_apply_one( a, p[ i ].i, [ i, &p ]( auto& a, const std::size_t n ){ return resolve_for_get( a.data() + n, p, i + 1 ); } );
+                  return array_apply_one( v, p[ i ].i, [ i, &p ]( auto& a, const std::size_t n ){ return resolve_for_get( a.data() + n, p, i + 1 ); } );
                case token::MULTI:
                   throw std::runtime_error( "resolve for get has '*' in key" );
                case token::APPEND:
-                  throw std::runtime_error( "resolve for get has '-' in key" );
+                  return array_apply_last( v, [ i, &p ]( auto& a, const std::size_t n ){ return resolve_for_get( a.data() + n, p, i + 1 ); } );
             }
             return nullptr;
          }
@@ -91,7 +63,7 @@ namespace tao
          inline value* resolve_for_set_insert( const pegtl::position& z, std::vector< value >& a, const pointer& p, const std::size_t i )
          {
             if( a.empty() ) {
-               a.emplace_back( json::empty_object );  // Can this happen?
+               a.emplace_back( json::empty_object );  // TODO: Can this happen?
                a.back().set_position( z );
             }
             auto& b = a.back().get_object();
@@ -110,20 +82,18 @@ namespace tao
             if( i == p.size() ) {
                return v;
             }
-            auto& a = v->get_array();
-
             switch( p[ i ].t ) {
                case token::NAME:
-                  if( auto* x = object_apply_last( a, p[ i ].k, [ i, &p, &z ]( value* v ){ return resolve_for_set( z, v, p, i + 1 ); }, nullptr ) ) {
+                  if( auto* x = object_apply_last( v, p[ i ].k, [ i, &p, &z ]( value* v ){ return resolve_for_set( z, v, p, i + 1 ); }, nullptr ) ) {
                      return x;
                   }
-                  return resolve_for_set_insert( z, a, p, i );
+                  return resolve_for_set_insert( z, v->get_array(), p, i );
                case token::INDEX:
-                  return array_apply_one( a, p[ i ].i, [ i, &p, &z ]( auto& a, const std::size_t n ){ return resolve_for_set( z, a.data() + n, p, i + 1 ); } );
+                  return array_apply_one( v, p[ i ].i, [ i, &p, &z ]( auto& a, const std::size_t n ){ return resolve_for_set( z, a.data() + n, p, i + 1 ); } );
                case token::MULTI:
                   throw std::runtime_error( "resolve for set has '*' in key" );
                case token::APPEND:
-                  return resolve_for_set_append( z, a, p, i );
+                  return resolve_for_set_append( z, v->get_array(), p, i );
             }
             assert( false );
          }

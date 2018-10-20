@@ -24,11 +24,9 @@ namespace tao
                case json::type::STRING:
                case json::type::STRING_VIEW:
                   return token( v.as< std::string >() );
-                  break;
                case json::type::SIGNED:
                case json::type::UNSIGNED:
                   return token( v.as< std::size_t >() );
-                  break;
                default:
                   throw std::runtime_error( "invalid json type for reference" );
             }

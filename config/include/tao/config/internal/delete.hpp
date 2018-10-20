@@ -22,16 +22,16 @@ namespace tao
          {
             switch( t.t ) {
                case token::NAME:
-                  object_apply_all( v->get_array(), [ &k = t.k ]( value& v ){ v.get_object().erase( k ); } );
+                  object_apply_all( v, [ &k = t.k ]( value& v ){ v.get_object().erase( k ); } );
                   break;
                case token::INDEX:
-                  array_apply_one( v->get_array(), t.i, []( auto& a, const std::size_t n ){ a.erase( a.begin() + n ); } );
+                  array_apply_one( v, t.i, []( auto& a, const std::size_t n ){ a.erase( a.begin() + n ); } );
                   break;
                case token::MULTI:
-                  container_apply_all( v->get_array(), []( value& v ){ if( v.is_array() ){ v.unsafe_get_array().clear(); } else if( v.is_object() ) { v.unsafe_get_object().clear(); } else { assert( false ); } } );
+                  container_apply_all( v, []( value& v ){ if( v.is_array() ){ v.unsafe_get_array().clear(); } else if( v.is_object() ) { v.unsafe_get_object().clear(); } else { assert( false ); } } );
                   break;
                case token::APPEND:
-                  array_apply_last( v->get_array(), []( auto& a, const std::size_t n ){ a.erase( a.begin() + n ); } );
+                  array_apply_last( v, []( auto& a, const std::size_t n ){ a.erase( a.begin() + n ); } );
                   break;
             }
          }
@@ -48,16 +48,16 @@ namespace tao
             }
             switch( p[ i ].t ) {
                case token::NAME:
-                  object_apply_all( v->get_array(), [ i, &p ]( value& v ){ if( auto* x = v.find( p[ i ].k ) ) { delete_recursive( x, p, i + 1 ); } } );
+                  object_apply_all( v, [ i, &p ]( value& v ){ if( auto* x = v.find( p[ i ].k ) ) { delete_recursive( x, p, i + 1 ); } } );
                   break;
                case token::INDEX:
-                  array_apply_one( v->get_array(), p[ i ].i, [ i, &p ]( auto& a, const std::size_t n ){ delete_recursive( a.data() + n, p, i + 1 ); } );
+                  array_apply_one( v, p[ i ].i, [ i, &p ]( auto& a, const std::size_t n ){ delete_recursive( a.data() + n, p, i + 1 ); } );
                   break;
                case token::MULTI:
-                  container_apply_all_all( v->get_array(), [ i, &p ]( value& v ){ delete_recursive( &v, p, i + 1 ); } );
+                  container_apply_all_all( v, [ i, &p ]( value& v ){ delete_recursive( &v, p, i + 1 ); } );
                   break;
                case token::APPEND:
-                  array_apply_last( v->get_array(), [ i, &p ]( auto& a, const std::size_t n ){ delete_recursive( a.data() + n, p, i + 1 ); } );
+                  array_apply_last( v, [ i, &p ]( auto& a, const std::size_t n ){ delete_recursive( a.data() + n, p, i + 1 ); } );
                   break;
             }
          }
