@@ -333,6 +333,18 @@ namespace tao
          };
 
          template<>
+         struct action< rules::parse_value >
+         {
+            template< typename Input >
+            static void apply( const Input& in, state& st )
+            {
+               pegtl::file_input i2( st.temp.get_string() );
+               st.temp.discard();
+               pegtl::parse_nested< rules::value, action, control >( in, i2, st );
+            }
+         };
+
+         template<>
          struct action< rules::shell_value >
          {
             template< typename Input >
@@ -346,7 +358,7 @@ namespace tao
                st.temp.discard();
                const auto s = shell_popen( c );
                pegtl::memory_input i2( s, c );
-               pegtl::parse_nested< rules::shell, action, control >( in, i2, st );
+               pegtl::parse_nested< rules::value, action, control >( in, i2, st );
             }
          };
 

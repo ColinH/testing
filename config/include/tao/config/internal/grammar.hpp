@@ -49,6 +49,7 @@ namespace tao
             struct copy_s : pegtl::string< 'c', 'o', 'p', 'y' > {};
             struct read_s : pegtl::string< 'r', 'e', 'a', 'd' > {};
             struct debug_s : pegtl::string< 'd', 'e', 'b', 'u', 'g' > {};
+            struct parse_s : pegtl::string< 'p', 'a', 'r', 's', 'e' > {};
             struct shell_s : pegtl::string< 's', 'h', 'e', 'l', 'l' > {};
 
             struct stderr_s : pegtl::string< 's', 't', 'd', 'e', 'r', 'r' > {};
@@ -88,9 +89,10 @@ namespace tao
             struct copy_value : pegtl::if_must< copy_s, wsp, phase1_key > {};
             struct read_value : pegtl::if_must< read_s, wsp, phase1_string > {};
             struct debug_value : pegtl::if_must< debug_s, wsp, phase1_key > {};
+            struct parse_value : pegtl::if_must< parse_s, wsp, phase1_string > {};
             struct shell_value : pegtl::if_must< shell_s, wsp, phase1_string > {};
 
-            struct immediate : pegtl::sor< env_value, copy_value, read_value, debug_value, shell_value > {};
+            struct immediate : pegtl::sor< env_value, copy_value, read_value, debug_value, shell_value > {};  // TODO: Keep this all here, or unify syntax and delegate to a run-time map later?
 
             struct at_immediate : pegtl::at< identifier, wsp > {};  // TODO: Enough?
             struct extension : pegtl::if_must< round_a, pegtl::if_must_else< at_immediate, immediate, phase2_key >, round_z > {};
@@ -124,7 +126,7 @@ namespace tao
 
             struct grammar : pegtl::must< wss, grammar_list > {};
 
-            struct shell : pegtl::must< wss, value_part, wss, pegtl::eof > {};
+            struct value : pegtl::must< wss, value_part, wss, pegtl::eof > {};
 
          }  // namespace rules
 
