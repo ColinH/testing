@@ -8,7 +8,6 @@
 
 #include "addition.hpp"
 #include "resolve.hpp"
-#include "utility.hpp"
 #include "value.hpp"
 
 namespace tao
@@ -17,6 +16,24 @@ namespace tao
    {
       namespace internal
       {
+         inline token token_from_value( const value& v )
+         {
+            assert( !v.t );
+
+            switch( v.type() ) {
+               case json::type::STRING:
+               case json::type::STRING_VIEW:
+                  return token( v.as< std::string >() );
+                  break;
+               case json::type::SIGNED:
+               case json::type::UNSIGNED:
+                  return token( v.as< std::size_t >() );
+                  break;
+               default:
+                  throw std::runtime_error( "invalid json type for reference" );
+            }
+         }
+
          inline value phase2_reference( const value& r, const value& v )
          {
             assert( v.t == annotation::REFERENCE );

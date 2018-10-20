@@ -10,7 +10,6 @@
 #include "state.hpp"
 #include "system.hpp"
 #include "to_stream.hpp"
-#include "utility.hpp"
 
 namespace tao
 {
@@ -101,13 +100,24 @@ namespace tao
          };
 
          template<>
+         struct action< rules::phase1_multi >
+         {
+            static void apply0( state& st )
+            {
+               assert( !st.keys.empty() );
+
+               st.keys.back().emplace_back( token::MULTI );
+            }
+         };
+
+         template<>
          struct action< rules::phase1_append >
          {
             static void apply0( state& st )
             {
                assert( !st.keys.empty() );
 
-               st.keys.back().emplace_back();
+               st.keys.back().emplace_back( token::APPEND );
             }
          };
 
@@ -150,6 +160,17 @@ namespace tao
                }
             }
          };
+
+         template< typename T, typename Input >
+         void begin_container( const Input& in, state& st )
+         {
+            assert( !st.stack.empty() );
+            assert( st.stack.back()->t == annotation::ADDITION );
+            assert( st.stack.back()->is_array() );
+
+            st.stack.emplace_back( &st.stack.back()->get_array().emplace_back( T{ 0 } ) );
+            st.stack.back()->position.set_position( in.position() );
+         }
 
          template<>
          struct action< rules::curly_a >
@@ -266,7 +287,7 @@ namespace tao
             template< typename Input >
             static void apply( const Input& in, state& st )
             {
-               st.temp = in.string();  // TODO: Escaping.
+               st.temp = in.string();  // TODO: Escaping...
             }
          };
 

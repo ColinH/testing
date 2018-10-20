@@ -18,11 +18,13 @@ namespace tao
             {
                NAME,
                INDEX,
+               MULTI,
                APPEND
             };
 
-            token()
-               : t( type::APPEND )
+            explicit
+            token( const type t )
+               : t( t )
             {
             }
 
@@ -39,7 +41,9 @@ namespace tao
             }
 
             type t;
-            // TODO: Encapsulation w/union.
+            // Only one of the following is valid, but that is accepatble for
+            // the moment because this is a config reader, not HPC, and it is
+            // only in the internal representation, not exposed to the user.
             std::size_t i;
             std::string k;
          };

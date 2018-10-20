@@ -27,6 +27,7 @@ namespace tao
             struct at : pegtl::one< '@' > {};  // Phase 1
             struct dot : pegtl::one< '.' > {};
             struct plus : pegtl::one< '+' > {};
+            struct star : pegtl::one< '*' > {};
             struct minus : pegtl::one< '-' > {};
             struct comma : pegtl::one< ',' > {};  // Optional
             struct equals : pegtl::one< ':', '=' > {};
@@ -69,8 +70,9 @@ namespace tao
 
             struct phase1_name : identifier {};
             struct phase1_index : pegtl::plus< pegtl::digit > {};
+            struct phase1_multi : star {};
             struct phase1_append : minus {};
-            struct phase1_part : pegtl::sor< phase1_name, phase1_index, phase1_append > {};
+            struct phase1_part : pegtl::sor< phase1_name, phase1_index, phase1_multi, phase1_append > {};
 
             struct phase2_name : identifier {};
             struct phase2_index : pegtl::plus< pegtl::digit > {};

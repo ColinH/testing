@@ -30,7 +30,7 @@ namespace tao
          }
 
          template< typename A, typename F >
-         auto array_apply( A& a, std::size_t n, const F& f )
+         auto array_apply_one( A& a, std::size_t n, const F& f )
          {
             for( auto& v : a ) {
                if( v.t ) {
@@ -49,6 +49,29 @@ namespace tao
                n -= s;
             }
             throw std::runtime_error( "phase one array out of bounds" );
+         }
+
+         template< typename A, typename F >
+         auto array_apply_last( A& a, const F& f )
+         {
+            for( std::size_t j = 0; j < a.size(); ++j ) {
+               const std::size_t i = a.size() - j - 1;
+               auto& v = a[ i ];
+
+               if( v.t ) {
+                  assert( v.t == annotation::REFERENCE );
+                  throw std::runtime_error( "phase one across phase two reference" );
+               }
+               if( !v.is_array() ) {
+                  throw std::runtime_error( "phase one size of non-array" );
+               }
+               auto& b = v.unsafe_get_array();
+
+               if( !b.empty() ) {
+                  return f( b, b.size() - 1 );
+               }
+            }
+            throw std::runtime_error( "phase one array has no last element" );
          }
 
          template< typename A, typename F >
@@ -91,34 +114,47 @@ namespace tao
             throw std::runtime_error( "phase one name not found" );
          }
 
-         template< typename T, typename Input >
-         void begin_container( const Input& in, state& st )
+         template< typename A, typename F >
+         void container_apply_all( A& a, const F& f )
          {
-            assert( !st.stack.empty() );
-            assert( st.stack.back()->t == annotation::ADDITION );
-            assert( st.stack.back()->is_array() );
-
-            st.stack.emplace_back( &st.stack.back()->get_array().emplace_back( T{ 0 } ) );
-            st.stack.back()->position.set_position( in.position() );
+            for( auto& v : a ) {
+               if( v.t ) {
+                  assert( v.t == annotation::REFERENCE );
+                  throw std::runtime_error( "phase one across phase two reference" );
+               }
+               if( v.is_array() ) {
+                  f( v );
+                  continue;
+               }
+               if( v.is_object() ) {
+                  f( v );
+                  continue;
+               }
+               throw std::runtime_error( "wrong type" );
+            }
          }
 
-         inline token token_from_value( const value& v )
+         template< typename A, typename F >
+         void container_apply_all_all( A& a, const F& f )
          {
-            assert( !v.t );
-
-            switch( v.type() ) {
-               case json::type::STRING:
-               case json::type::STRING_VIEW:
-                  return token( v.as< std::string >() );
-                  break;
-               case json::type::SIGNED:
-               case json::type::UNSIGNED:
-                  return token( v.as< std::size_t >() );
-                  break;
-               case json::type::NULL_:
-                  return token();
-               default:
-                  throw std::runtime_error( "invalid json type for reference" );
+            for( auto& v : a ) {
+               if( v.t ) {
+                  assert( v.t == annotation::REFERENCE );
+                  throw std::runtime_error( "phase one across phase two reference" );
+               }
+               if( v.is_array() ) {
+                  for( auto& w : v.unsafe_get_array() ) {
+                     f( w );
+                  }
+                  continue;
+               }
+               if( v.is_object() ) {
+                  for( auto& p : v.unsafe_get_object() ) {
+                     f( p.second );
+                  }
+                  continue;
+               }
+               throw std::runtime_error( "wrong type" );
             }
          }
 

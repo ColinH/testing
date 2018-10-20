@@ -36,8 +36,10 @@ namespace tao
                   return resolve_for_get( &v->at( p[ i ].k ), p, i + 1 );
                case token::INDEX:
                   return resolve_for_get( &v->at( p[ i ].i ), p, i + 1 );
+               case token::MULTI:
+                  throw std::runtime_error( "resolve for get has '*' in key" );
                case token::APPEND:
-                  throw std::runtime_error( "resolve for get has append in key" );
+                  throw std::runtime_error( "resolve for get has '-' in key" );
             }
             assert( false );
          }
@@ -62,9 +64,11 @@ namespace tao
                case token::NAME:
                   return object_apply_last( a, p[ i ].k, [ i, &p ]( const value* v ){ return resolve_for_get( v, p, i + 1 ); } );
                case token::INDEX:
-                  return array_apply( a, p[ i ].i, [ i, &p ]( auto& a, const std::size_t n ){ return resolve_for_get( a.data() + n, p, i + 1 ); } );
+                  return array_apply_one( a, p[ i ].i, [ i, &p ]( auto& a, const std::size_t n ){ return resolve_for_get( a.data() + n, p, i + 1 ); } );
+               case token::MULTI:
+                  throw std::runtime_error( "resolve for get has '*' in key" );
                case token::APPEND:
-                  throw std::runtime_error( "resolve for get has append in key" );
+                  throw std::runtime_error( "resolve for get has '-' in key" );
             }
             return nullptr;
          }
@@ -115,7 +119,9 @@ namespace tao
                   }
                   return resolve_for_set_insert( z, a, p, i );
                case token::INDEX:
-                  return array_apply( a, p[ i ].i, [ i, &p, &z ]( auto& a, const std::size_t n ){ return resolve_for_set( z, a.data() + n, p, i + 1 ); } );
+                  return array_apply_one( a, p[ i ].i, [ i, &p, &z ]( auto& a, const std::size_t n ){ return resolve_for_set( z, a.data() + n, p, i + 1 ); } );
+               case token::MULTI:
+                  throw std::runtime_error( "resolve for set has '*' in key" );
                case token::APPEND:
                   return resolve_for_set_append( z, a, p, i );
             }
