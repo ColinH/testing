@@ -24,7 +24,7 @@ namespace tao
                json::events::produce< traits >( c, v.position );
                c.member();
                c.key( "data" );
-               json::events::basic_from_value< from_value< Consumer >, Consumer, traits >( c, v );
+               json::events::from_value< from_value< Consumer > >( c, v );
                c.member();
                c.end_object( 3 );
             }
