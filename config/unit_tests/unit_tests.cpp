@@ -18,7 +18,7 @@ namespace tao
    void unit_test( const std::string& name )
    {
       const auto c = config::parse_file( name + ".config" );
-      const auto j = json::jaxn::basic_parse_file< config::traits >( name + ".jaxn" );
+      const auto j = json::jaxn::basic_parse_file< config::traits >( name + "_only_data.jaxn" );
       if( c != j ) {
          ++failed;
          std::cerr << "Testcase " << name << " << failed!" << std::endl;

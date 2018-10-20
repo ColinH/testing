@@ -7,11 +7,11 @@ SOURCES := $(shell find . -name '*.cpp')
 DEPENDS := $(SOURCES:%.cpp=build/%.d)
 BINARIES := $(SOURCES:%.cpp=build/%)
 
-TESTFILES := $(shell find tests -name '*.config')
+TESTFILES := $(shell find unit_tests -name '*.config')
 TESTCASES := $(TESTFILES:%.config=%)
 
 all: $(BINARIES)
-	build/tests $(TESTCASES)
+	build/unit_tests/unit_tests $(TESTCASES)
 
 build/%.d: %.cpp Makefile
 	@mkdir -p $(@D)
