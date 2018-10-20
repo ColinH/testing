@@ -21,7 +21,7 @@ namespace tao
       const auto j = json::jaxn::basic_parse_file< config::traits >( name + "_only_data.jaxn" );
       if( c != j ) {
          ++failed;
-         std::cerr << "Testcase " << name << " << failed!" << std::endl;
+         std::cerr << "Testcase '" << name << "' failed!" << std::endl;
       }
    }
 
