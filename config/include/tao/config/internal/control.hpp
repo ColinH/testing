@@ -53,7 +53,7 @@ namespace tao
             : public pegtl::normal< rules::phase2_key >
          {
             template< typename Input >
-            static void start( const Input& in, state& st )
+            static void start( const Input&, state& st )
             {
                assert( !st.stack.empty() );
                assert( st.stack.back()->t );
@@ -61,7 +61,6 @@ namespace tao
 
                st.stack.emplace_back( &st.stack.back()->emplace_back( json::empty_array ) );
                st.stack.back()->t = annotation::REFERENCE;
-               st.stack.back()->set_position( in.position() );
             }
 
             template< typename Input >
@@ -78,7 +77,7 @@ namespace tao
             : public pegtl::normal< rules::element >
          {
             template< typename Input >
-            static void start( const Input& in, state& st )
+            static void start( const Input&, state& st )
             {
                assert( !st.stack.empty() );
                assert( !st.stack.back()->t );
@@ -86,7 +85,6 @@ namespace tao
 
                st.stack.emplace_back( &st.stack.back()->emplace_back( json::empty_array ) );
                st.stack.back()->t = annotation::ADDITION;
-               st.stack.back()->set_position( in.position() );
             }
          };
 

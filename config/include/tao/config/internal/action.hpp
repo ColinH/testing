@@ -27,12 +27,11 @@ namespace tao
          struct action< rules::null_s >
          {
             template< typename Input >
-            static void apply( const Input& in, state& st )
+            static void apply( const Input&, state& st )
             {
                assert( st.temp.type() == json::type::DISCARDED );
 
                st.temp.unsafe_assign_null();
-               st.temp.set_position( in.position() );
             }
          };
 
@@ -40,12 +39,11 @@ namespace tao
          struct action< rules::true_s >
          {
             template< typename Input >
-            static void apply( const Input& in, state& st )
+            static void apply( const Input&, state& st )
             {
                assert( st.temp.type() == json::type::DISCARDED );
 
                st.temp.unsafe_assign_boolean( true );
-               st.temp.set_position( in.position() );
             }
          };
 
@@ -53,12 +51,11 @@ namespace tao
          struct action< rules::false_s >
          {
             template< typename Input >
-            static void apply( const Input& in, state& st )
+            static void apply( const Input&, state& st )
             {
                assert( st.temp.type() == json::type::DISCARDED );
 
                st.temp.unsafe_assign_boolean( false );
-               st.temp.set_position( in.position() );
             }
          };
 
@@ -71,7 +68,6 @@ namespace tao
                assert( st.temp.type() == json::type::DISCARDED );
 
                st.temp.unsafe_assign_unsigned( std::stoul( in.string() ) );
-               st.temp.set_position( in.position() );
             }
          };
 
@@ -130,7 +126,6 @@ namespace tao
                assert( st.temp.type() == json::type::DISCARDED );
 
                st.temp.unsafe_assign_string( in.string() );
-               st.temp.set_position( in.position() );
             }
          };
 
@@ -143,7 +138,6 @@ namespace tao
                assert( st.temp.type() == json::type::DISCARDED );
 
                st.temp.unsafe_assign_unsigned( std::stoul( in.string() ) );
-               st.temp.set_position( in.position() );
             }
          };
 
@@ -161,24 +155,22 @@ namespace tao
             }
          };
 
-         template< typename T, typename Input >
-         void begin_container( const Input& in, state& st )
+         template< typename T >
+         void begin_container( state& st )
          {
             assert( !st.stack.empty() );
             assert( st.stack.back()->t == annotation::ADDITION );
             assert( st.stack.back()->is_array() );
 
             st.stack.emplace_back( &st.stack.back()->emplace_back( T{ 0 } ) );
-            st.stack.back()->set_position( in.position() );
          }
 
          template<>
          struct action< rules::curly_a >
          {
-            template< typename Input >
-            static void apply( const Input& in, state& st )
+            static void apply0( state& st )
             {
-               begin_container< json::empty_object_t >( in, st );
+               begin_container< json::empty_object_t >( st );
             }
          };
 
@@ -196,10 +188,9 @@ namespace tao
          template<>
          struct action< rules::square_a >
          {
-            template< typename Input >
-            static void apply( const Input& in, state& st )
+            static void apply0( state& st )
             {
-               begin_container< json::empty_array_t >( in, st );
+               begin_container< json::empty_array_t >( st );
             }
          };
 
@@ -232,31 +223,28 @@ namespace tao
          template<>
          struct action< rules::equals >
          {
-            template< typename Input >
-            static void apply( const Input& in, state& st )
+            static void apply0( state& st )
             {
                assert( !st.stack.empty() );
                assert( !st.stack.back()->t );
                assert( st.stack.back()->type() == json::type::OBJECT );
 
-               st.stack.emplace_back( &( resolve_and_pop_for_set( in, st ) = json::empty_array ) );
+               st.stack.emplace_back( &( resolve_and_pop_for_set( st ) = json::empty_array ) );
                st.stack.back()->t = annotation::ADDITION;
-               st.stack.back()->set_position( in.position() );
             }
          };
 
          template<>
          struct action< rules::plus_equals >
          {
-            template< typename Input >
-            static void apply( const Input& in, state& st )
+            static void apply0( state& st )
             {
                assert( !st.stack.empty() );
                assert( !st.stack.back()->t );
                assert( st.stack.back()->is_object() );
                assert( st.stack.back()->type() == json::type::OBJECT );
 
-               st.stack.emplace_back( &resolve_and_pop_for_set( in, st ) );
+               st.stack.emplace_back( &resolve_and_pop_for_set( st ) );
             }
          };
 
@@ -289,7 +277,6 @@ namespace tao
             static void apply( const Input& in, state& st )
             {
                st.temp = in.string();  // TODO: Escaping...
-               st.temp.set_position( in.position() );
             }
          };
 
@@ -304,9 +291,6 @@ namespace tao
 
                const auto s = st.temp.get_string();
                st.temp = get_env( s );
-               st.temp.source = "$" + s;
-               st.temp.line = 0;
-               st.temp.byte_in_line = 0;
             }
          };
 
@@ -337,9 +321,6 @@ namespace tao
 
                const auto s = st.temp.get_string();
                st.temp = read_file( s );
-               st.temp.source = s;
-               st.temp.line = 0;
-               st.temp.byte_in_line = 0;
             }
          };
 
@@ -357,9 +338,6 @@ namespace tao
                const auto& v = resolve_and_pop_for_get( st );
                to_stream( o, v );
                st.temp.unsafe_assign_string( o.str() );
-               st.temp.source = v.source;
-               st.temp.line = v.line;
-               st.temp.byte_in_line = v.byte_in_line;
             }
          };
 

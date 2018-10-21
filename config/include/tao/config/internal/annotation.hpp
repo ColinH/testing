@@ -21,22 +21,10 @@ namespace tao
                REFERENCE
             };
 
-            std::size_t line;
-            std::size_t byte_in_line;
-            std::string source;
-
             std::optional< type > t;
 
             mutable bool phase2_recursion_marker = false;
-
-            template< typename P >
-            void set_position( const P& p )
-            {
-               line = p.line;
-               byte_in_line = p.byte_in_line;
-               source = p.source;
-            }
-         };
+          };
 
       }  // namespace internal
 

@@ -122,7 +122,6 @@ namespace tao
                const phase2_guard _( v );
 
                assert( !v.t );
-               assert( !v.source.empty() );
 
                json::basic_value< Traits > t;
 
@@ -164,7 +163,6 @@ namespace tao
                      std::cerr << json::to_string( v.type() ) << std::endl;
                      throw std::runtime_error( "invalid json type in phase two" );
                }
-               //               t.position = v.position;  // TODO: Will we need this?
                return t;
             }
 
@@ -173,7 +171,6 @@ namespace tao
                const phase2_guard _( v );
 
                assert( v.t == annotation::ADDITION );
-               assert( !v.source.empty() );
 
                std::vector< json::basic_value< Traits > > t;
 
@@ -189,9 +186,7 @@ namespace tao
                      t.emplace_back( regular( i ) );
                   }
                }
-               auto r = value_addition( t );
-               //               r.position = v.position;  // TODO: Let's see how often this is wrong...
-               return r;
+               return value_addition( t );
             }
 
          private:
