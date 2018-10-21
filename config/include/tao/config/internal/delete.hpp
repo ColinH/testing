@@ -62,15 +62,13 @@ namespace tao
             }
          }
 
-         inline void delete_and_pop( state& st )
+         inline void delete_key( state& st )
          {
             assert( !st.stack.empty() );
             assert( ( st.stack.size() & 1 ) == 0 );
-            assert( !st.keys.empty() );
-            assert( !st.keys.back().empty() );
+            assert( !st.key.empty() );
 
-            delete_recursive( *( st.stack.end() - 2 ), st.keys.back(), 0 );
-            st.keys.pop_back();
+            delete_recursive( *( st.stack.end() - 2 ), st.key, 0 );
          }
 
       }  // namespace internal

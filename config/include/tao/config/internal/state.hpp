@@ -30,8 +30,9 @@ namespace tao
             value temp;
             value result;
 
+            pointer key;
+
             std::vector< value* > stack;
-            std::vector< pointer > keys;
          };
 
       }  // namespace internal

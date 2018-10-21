@@ -26,13 +26,7 @@ namespace tao
             template< typename Input >
             static void start( const Input&, state& st )
             {
-               st.keys.push_back( pointer() );
-            }
-
-            template< typename Input >
-            static void failure( const Input&, state& st )
-            {
-               st.keys.pop_back();
+               st.key.clear();
             }
          };
 

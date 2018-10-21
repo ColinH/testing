@@ -106,30 +106,22 @@ namespace tao
             return *resolve_for_get( &v, p, []( const value& v ){ return &v; }, 0 );
          }
 
-         inline const value& resolve_and_pop_for_get( state& st )
+         inline const value& resolve_for_get( state& st )
          {
             assert( !st.stack.empty() );
-            assert( !st.keys.empty() );
-            assert( !st.keys.back().empty() );
+            assert( !st.key.empty() );
 
-            const auto* w = resolve_for_get( st.stack.front(), st.keys.back(), []( const value& v ){ return &v; }, 0 );
-            assert( w );
-            st.keys.pop_back();
-            return *w;
+            return *resolve_for_get( st.stack.front(), st.key, []( const value& v ){ return &v; }, 0 );
          }
 
          template< typename Input >
-         value& resolve_and_pop_for_set( const Input& in, state& st )
+         value& resolve_for_set( const Input& in, state& st )
          {
             assert( st.stack.size() > 1 );
             assert( ( st.stack.size() & 1 ) == 0 );
-            assert( !st.keys.empty() );
-            assert( !st.keys.back().empty() );
+            assert( !st.key.empty() );
 
-            auto* w = resolve_for_set( in.position(), *( st.stack.end() - 2 ), st.keys.back(), 0 );
-            assert( w );
-            st.keys.pop_back();
-            return *w;
+            return *resolve_for_set( in.position(), *( st.stack.end() - 2 ), st.key, 0 );
          }
 
       }  // namespace internal

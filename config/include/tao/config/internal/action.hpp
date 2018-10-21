@@ -81,9 +81,7 @@ namespace tao
             template< typename Input >
             static void apply( const Input& in, state& st )
             {
-               assert( !st.keys.empty() );
-
-               st.keys.back().emplace_back( in.string() );
+               st.key.emplace_back( in.string() );
             }
          };
 
@@ -93,9 +91,7 @@ namespace tao
             template< typename Input >
             static void apply( const Input& in, state& st )
             {
-               assert( !st.keys.empty() );
-
-               st.keys.back().emplace_back( std::stoul( in.string() ) );
+               st.key.emplace_back( std::stoul( in.string() ) );
             }
          };
 
@@ -104,9 +100,7 @@ namespace tao
          {
             static void apply0( state& st )
             {
-               assert( !st.keys.empty() );
-
-               st.keys.back().emplace_back( token::MULTI );
+               st.key.emplace_back( token::MULTI );
             }
          };
 
@@ -115,9 +109,7 @@ namespace tao
          {
             static void apply0( state& st )
             {
-               assert( !st.keys.empty() );
-
-               st.keys.back().emplace_back( token::APPEND );
+               st.key.emplace_back( token::APPEND );
             }
          };
 
@@ -239,7 +231,7 @@ namespace tao
                assert( !st.stack.back()->t );
                assert( st.stack.back()->type() == json::type::OBJECT );
 
-               st.stack.emplace_back( &( resolve_and_pop_for_set( in, st ) = json::empty_array ) );
+               st.stack.emplace_back( &( resolve_for_set( in, st ) = json::empty_array ) );
                st.stack.back()->t = annotation::ADDITION;
                st.stack.back()->set_position( in.position() );
             }
@@ -256,7 +248,7 @@ namespace tao
                assert( st.stack.back()->is_object() );
                assert( st.stack.back()->type() == json::type::OBJECT );
 
-               st.stack.emplace_back( &resolve_and_pop_for_set( in, st ) );
+               st.stack.emplace_back( &resolve_for_set( in, st ) );
             }
          };
 
@@ -321,7 +313,7 @@ namespace tao
                assert( st.temp.type() == json::type::DISCARDED );
 
                auto& a = st.stack.back()->get_array();
-               const auto& v = resolve_and_pop_for_get( st ).get_array();
+               const auto& v = resolve_for_get( st ).get_array();
                a.insert( a.end(), v.begin(), v.end() );
             }
          };
@@ -354,7 +346,7 @@ namespace tao
                assert( st.temp.type() == json::type::DISCARDED );
 
                std::ostringstream o;
-               const auto& v = resolve_and_pop_for_get( st );
+               const auto& v = resolve_for_get( st );
                to_stream( o, v );
                st.temp.unsafe_assign_string( o.str() );
                st.temp.source = v.source;
@@ -398,7 +390,7 @@ namespace tao
          {
             static void apply0( state& st )
             {
-               to_stream( std::cerr, resolve_and_pop_for_get( st ), 3 );
+               to_stream( std::cerr, resolve_for_get( st ), 3 );
                std::cerr << std::endl;
             }
          };
@@ -408,9 +400,7 @@ namespace tao
          {
             static void apply0( state& st )
             {
-               assert( !st.keys.empty() );
-
-               delete_and_pop( st );
+               delete_key( st );
             }
          };
 
