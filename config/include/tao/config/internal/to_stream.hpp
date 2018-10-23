@@ -47,8 +47,7 @@ namespace tao
                      json::events::produce< traits >( c, v.get_object() );
                      return;
                   case type::NOTHING:
-                     c.null();
-                     return;
+                     assert( false );
                   case type::INDIRECT:
                      json::events::produce< traits >( c, v.get_indirect() );
                      return;
