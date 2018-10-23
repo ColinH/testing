@@ -4,14 +4,13 @@
 #define TAO_CONFIG_INTERNAL_PARSE_FILE_HPP
 
 #include <cassert>
+#include <string>
 
 #include "action.hpp"
 #include "control.hpp"
 #include "grammar.hpp"
 #include "pegtl.hpp"
-#include "phase2.hpp"
 #include "state.hpp"
-#include "value.hpp"
 
 namespace tao
 {
@@ -21,14 +20,18 @@ namespace tao
       {
          inline void parse_file_impl( state& st, const std::string& filename )
          {
-            assert( st.stack.size() == 2 );
-            assert( st.stack.front() == &st.result );
+            assert( st.astack.empty() );
+            assert( st.rstack.empty() );
+            assert( st.lstack.empty() );
+            assert( st.ostack.size() == 1 );
 
-            json_pegtl::file_input in( filename );
-            json_pegtl::parse< grammar, action, control >( in, st );
+            pegtl::file_input in( filename );
+            pegtl::parse< grammar, action, control >( in, st );
 
-            assert( st.stack.size() == 2 );
-            assert( st.stack.front() == &st.result );
+            assert( st.astack.empty() );
+            assert( st.rstack.empty() );
+            assert( st.lstack.empty() );
+            assert( st.ostack.size() == 1 );
          }
 
       }  // namespace internal

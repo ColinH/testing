@@ -18,8 +18,8 @@ namespace tao
             {
                NAME,
                INDEX,
-               MULTI,
-               APPEND
+               STAR,
+               MINUS
             };
 
             explicit

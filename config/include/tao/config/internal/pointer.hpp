@@ -15,6 +15,20 @@ namespace tao
       {
          using pointer = std::vector< token >;
 
+         inline pointer pop_front( const pointer& p )
+         {
+            assert( !p.empty() );
+
+            return pointer( p.begin() + 1, p.end() );
+         }
+
+         inline pointer pop_back( const pointer& p )
+         {
+            assert( !p.empty() );
+
+            return pointer( p.begin(), p.end() - 1 );
+         }
+
       }  // namespace internal
 
    }  // namespace config

@@ -3,8 +3,12 @@
 #ifndef TAO_CONFIG_INTERNAL_ACTION_HPP
 #define TAO_CONFIG_INTERNAL_ACTION_HPP
 
+#include <sstream>
+
+#include "access.hpp"
+#include "assign.hpp"
 #include "control.hpp"
-#include "delete.hpp"
+#include "erase.hpp"
 #include "grammar.hpp"
 #include "pegtl.hpp"
 #include "state.hpp"
@@ -29,9 +33,9 @@ namespace tao
             template< typename Input >
             static void apply( const Input&, state& st )
             {
-               assert( st.temp.type() == json::type::DISCARDED );
+               assert( !st.lstack.empty() );
 
-               st.temp.unsafe_assign_null();
+               st.lstack.back()->emplace_back( entry::atom( json::null ) );
             }
          };
 
@@ -41,9 +45,9 @@ namespace tao
             template< typename Input >
             static void apply( const Input&, state& st )
             {
-               assert( st.temp.type() == json::type::DISCARDED );
+               assert( !st.lstack.empty() );
 
-               st.temp.unsafe_assign_boolean( true );
+               st.lstack.back()->emplace_back( entry::atom( true ) );
             }
          };
 
@@ -53,9 +57,21 @@ namespace tao
             template< typename Input >
             static void apply( const Input&, state& st )
             {
-               assert( st.temp.type() == json::type::DISCARDED );
+               assert( !st.lstack.empty() );
 
-               st.temp.unsafe_assign_boolean( false );
+               st.lstack.back()->emplace_back( entry::atom( false ) );
+            }
+         };
+
+         template<>
+         struct action< rules::string_value >
+         {
+            template< typename Input >
+            static void apply( const Input& in, state& st )
+            {
+               assert( !st.lstack.empty() );
+
+               st.lstack.back()->emplace_back( entry::atom( in.string() ) );  // TODO: Escaping...
             }
          };
 
@@ -65,218 +81,9 @@ namespace tao
             template< typename Input >
             static void apply( const Input& in, state& st )
             {
-               assert( st.temp.type() == json::type::DISCARDED );
+               assert( !st.lstack.empty() );
 
-               st.temp.unsafe_assign_unsigned( std::stoul( in.string() ) );
-            }
-         };
-
-         template<>
-         struct action< rules::phase1_name >
-         {
-            template< typename Input >
-            static void apply( const Input& in, state& st )
-            {
-               assert( !st.keys.empty() );
-
-               st.keys.back().emplace_back( in.string() );
-            }
-         };
-
-         template<>
-         struct action< rules::phase1_index >
-         {
-            template< typename Input >
-            static void apply( const Input& in, state& st )
-            {
-               assert( !st.keys.empty() );
-
-               st.keys.back().emplace_back( std::stoul( in.string() ) );
-            }
-         };
-
-         template<>
-         struct action< rules::phase1_multi >
-         {
-            static void apply0( state& st )
-            {
-               assert( !st.keys.empty() );
-
-               st.keys.back().emplace_back( token::MULTI );
-            }
-         };
-
-         template<>
-         struct action< rules::phase1_append >
-         {
-            static void apply0( state& st )
-            {
-               assert( !st.keys.empty() );
-
-               st.keys.back().emplace_back( token::APPEND );
-            }
-         };
-
-         template<>
-         struct action< rules::phase2_name >
-         {
-            template< typename Input >
-            static void apply( const Input& in, state& st )
-            {
-               assert( st.temp.type() == json::type::DISCARDED );
-
-               st.temp.unsafe_assign_string( in.string() );
-            }
-         };
-
-         template<>
-         struct action< rules::phase2_index >
-         {
-            template< typename Input >
-            static void apply( const Input& in, state& st )
-            {
-               assert( st.temp.type() == json::type::DISCARDED );
-
-               st.temp.unsafe_assign_unsigned( std::stoul( in.string() ) );
-            }
-         };
-
-         template<>
-         struct action< rules::phase2_part >
-         {
-            static void apply0( state& st )
-            {
-               if( st.temp.type() != json::type::DISCARDED ) {
-                  assert( !st.stack.empty() );
-
-                  st.stack.back()->emplace_back( std::move( st.temp ) );
-                  st.temp.discard();
-               }
-            }
-         };
-
-         template< typename T >
-         void begin_container( state& st )
-         {
-            assert( !st.stack.empty() );
-            assert( st.stack.back()->t == annotation::ADDITION );
-            assert( st.stack.back()->is_array() );
-
-            st.stack.emplace_back( &st.stack.back()->emplace_back( T{ 0 } ) );
-         }
-
-         template<>
-         struct action< rules::curly_a >
-         {
-            static void apply0( state& st )
-            {
-               begin_container< json::empty_object_t >( st );
-            }
-         };
-
-         template<>
-         struct action< rules::curly_z >
-         {
-            static void apply0( state& st )
-            {
-               assert( st.stack.size() > 1 );
-
-               st.stack.pop_back();
-            }
-         };
-
-         template<>
-         struct action< rules::square_a >
-         {
-            static void apply0( state& st )
-            {
-               begin_container< json::empty_array_t >( st );
-            }
-         };
-
-         template<>
-         struct action< rules::square_z >
-         {
-            static void apply0( state& st )
-            {
-               assert( st.stack.size() > 1 );
-
-               st.stack.pop_back();
-            }
-         };
-
-         template<>
-         struct action< rules::value_part >
-         {
-            static void apply0( state& st )
-            {
-               if( st.temp.type() != json::type::DISCARDED ) {
-                  assert( !st.stack.empty() );
-                  assert( st.stack.back()->t == annotation::ADDITION );
-
-                  st.stack.back()->emplace_back( std::move( st.temp ) );
-                  st.temp.discard();
-               }
-            }
-         };
-
-         template<>
-         struct action< rules::equals >
-         {
-            static void apply0( state& st )
-            {
-               assert( !st.stack.empty() );
-               assert( !st.stack.back()->t );
-               assert( st.stack.back()->type() == json::type::OBJECT );
-
-               st.stack.emplace_back( &( resolve_and_pop_for_set( st ) = json::empty_array ) );
-               st.stack.back()->t = annotation::ADDITION;
-            }
-         };
-
-         template<>
-         struct action< rules::plus_equals >
-         {
-            static void apply0( state& st )
-            {
-               assert( !st.stack.empty() );
-               assert( !st.stack.back()->t );
-               assert( st.stack.back()->is_object() );
-               assert( st.stack.back()->type() == json::type::OBJECT );
-
-               st.stack.emplace_back( &resolve_and_pop_for_set( st ) );
-            }
-         };
-
-         template<>
-         struct action< rules::element >
-         {
-            static void apply0( state& st )
-            {
-               assert( st.stack.size() > 1 );
-
-               st.stack.pop_back();
-            }
-         };
-
-         template<>
-         struct action< rules::value_list >
-         {
-            static void apply0( state& st )
-            {
-               assert( st.stack.size() > 1 );
-
-               st.stack.pop_back();
-            }
-         };
-
-         template<>
-         struct action< rules::phase1_content >
-         {
-            template< typename Input >
-            static void apply( const Input& in, state& st )
-            {
-               st.temp = in.string();  // TODO: Escaping...
+               st.lstack.back()->emplace_back( entry::atom( std::stoul( in.string() ) ) );
             }
          };
 
@@ -285,28 +92,9 @@ namespace tao
          {
             static void apply0( state& st )
             {
-               assert( !st.stack.empty() );
-               assert( st.stack.back()->t == annotation::ADDITION );
-               assert( st.stack.back()->is_array() );
+               assert( !st.lstack.empty() );
 
-               const auto s = st.temp.get_string();
-               st.temp = get_env( s );
-            }
-         };
-
-         template<>
-         struct action< rules::copy_value >
-         {
-            static void apply0( state& st )
-            {
-               assert( !st.stack.empty() );
-               assert( st.stack.back()->t == annotation::ADDITION );
-               assert( st.stack.back()->is_array() );
-               assert( st.temp.type() == json::type::DISCARDED );
-
-               auto& a = st.stack.back()->get_array();
-               const auto& v = resolve_and_pop_for_get( st ).get_array();
-               a.insert( a.end(), v.begin(), v.end() );
+               st.lstack.back()->emplace_back( entry::atom( get_env( st.str ) ) );
             }
          };
 
@@ -315,12 +103,9 @@ namespace tao
          {
             static void apply0( state& st )
             {
-               assert( !st.stack.empty() );
-               assert( st.stack.back()->t == annotation::ADDITION );
-               assert( st.stack.back()->is_array() );
+               assert( !st.lstack.empty() );
 
-               const auto s = st.temp.get_string();
-               st.temp = read_file( s );
+               st.lstack.back()->emplace_back( entry::atom( read_file( st.str ) ) );
             }
          };
 
@@ -329,15 +114,14 @@ namespace tao
          {
             static void apply0( state& st )
             {
-               assert( !st.stack.empty() );
-               assert( st.stack.back()->t == annotation::ADDITION );
-               assert( st.stack.back()->is_array() );
-               assert( st.temp.type() == json::type::DISCARDED );
+               assert( !st.ostack.empty() );
+               assert( !st.lstack.empty() );
 
-               std::ostringstream o;
-               const auto& v = resolve_and_pop_for_get( st );
-               to_stream( o, v );
-               st.temp.unsafe_assign_string( o.str() );
+               std::ostringstream oss;
+               to_stream( oss, access( *st.ostack.back(), st.key ) );
+               st.lstack.back()->emplace_back( entry::atom( oss.str() ) );
+
+               st.key.clear();
             }
          };
 
@@ -347,8 +131,7 @@ namespace tao
             template< typename Input >
             static void apply( const Input& in, state& st )
             {
-               pegtl::file_input i2( st.temp.get_string() );
-               st.temp.discard();
+               pegtl::file_input i2( st.str );
                pegtl::parse_nested< rules::value, action, control >( in, i2, st );
             }
          };
@@ -359,15 +142,153 @@ namespace tao
             template< typename Input >
             static void apply( const Input& in, state& st )
             {
-               assert( !st.stack.empty() );
-               assert( st.stack.back()->t == annotation::ADDITION );
-               assert( st.stack.back()->is_array() );
-
-               const auto c = st.temp.get_string();
-               st.temp.discard();
-               const auto s = shell_popen( c );
-               pegtl::memory_input i2( s, c );
+               pegtl::string_input i2( shell_popen( st.str ), st.str );
                pegtl::parse_nested< rules::value, action, control >( in, i2, st );
+            }
+         };
+
+         template<>
+         struct action< rules::copy_value >
+         {
+            static void apply0( state& st )
+            {
+               assert( !st.key.empty() );
+               assert( !st.ostack.empty() );
+               assert( !st.lstack.empty() );
+
+               auto& d = *st.lstack.back();
+               auto& s = access( *st.ostack.front(), st.key );
+
+               d.insert( d.end(), s.begin(), s.end() );
+
+               st.key.clear();
+            }
+         };
+
+         template<>
+         struct action< rules::phase1_name >
+         {
+            template< typename Input >
+            static void apply( const Input& in, state& st )
+            {
+               st.key.emplace_back( in.string() );
+            }
+         };
+
+         template<>
+         struct action< rules::phase1_index >
+         {
+            template< typename Input >
+            static void apply( const Input& in, state& st )
+            {
+               st.key.emplace_back( std::stoul( in.string() ) );
+            }
+         };
+
+         template<>
+         struct action< rules::phase1_multi >
+         {
+            static void apply0( state& st )
+            {
+               st.key.emplace_back( token::STAR );
+            }
+         };
+
+         template<>
+         struct action< rules::phase1_append >
+         {
+            static void apply0( state& st )
+            {
+               st.key.emplace_back( token::MINUS );
+            }
+         };
+
+         template<>
+         struct action< rules::phase1_content >
+         {
+            template< typename Input >
+            static void apply( const Input& in, state& st )
+            {
+               st.str = in.string();  // TODO: Escaping...
+            }
+         };
+
+         template<>
+         struct action< rules::phase2_name >
+         {
+            template< typename Input >
+            static void apply( const Input& in, state& st )
+            {
+               assert( !st.rstack.empty() );
+               assert( st.rstack.back()->is_array() );
+
+               st.rstack.back()->emplace_back( in.string() );
+            }
+         };
+
+         template<>
+         struct action< rules::phase2_index >
+         {
+            template< typename Input >
+            static void apply( const Input& in, state& st )
+            {
+               assert( !st.rstack.empty() );
+               assert( st.rstack.back()->is_array() );
+
+               st.rstack.back()->emplace_back( std::stoul( in.string() ) );
+            }
+         };
+
+         template<>
+         struct action< rules::equals >
+         {
+            static void apply0( state& st )
+            {
+               assert( !st.ostack.empty() );
+
+               st.lstack.emplace_back( &assign( *st.ostack.back(), st.key ) );
+               st.lstack.back()->clear();
+
+               st.key.clear();
+            }
+         };
+
+         template<>
+         struct action< rules::plus_equals >
+         {
+            static void apply0( state& st )
+            {
+               assert( !st.ostack.empty() );
+
+               st.lstack.emplace_back( &assign( *st.ostack.back(), st.key ) );
+
+               st.key.clear();
+            }
+         };
+
+         template<>
+         struct action< rules::key_member >
+         {
+            static void apply0( state& st )
+            {
+               assert( !st.ostack.empty() );
+               assert( !st.lstack.empty() );
+
+               st.lstack.pop_back();
+            }
+         };
+
+         template<>
+         struct action< rules::erase_member >
+         {
+            static void apply0( state& st )
+            {
+               assert( !st.key.empty() );
+               assert( !st.ostack.empty() );
+
+               erase( *st.ostack.back(), st.key );
+
+               st.key.clear();
             }
          };
 
@@ -376,19 +297,13 @@ namespace tao
          {
             static void apply0( state& st )
             {
-               to_stream( std::cerr, resolve_and_pop_for_get( st ), 3 );
+               assert( !st.key.empty() );
+               assert( !st.ostack.empty() );
+
+               to_stream( std::cerr, access( *st.ostack.back(), st.key ), 3 );
                std::cerr << std::endl;
-            }
-         };
 
-         template<>
-         struct action< rules::delete_member >
-         {
-            static void apply0( state& st )
-            {
-               assert( !st.keys.empty() );
-
-               delete_and_pop( st );
+               st.key.clear();
             }
          };
 
@@ -398,8 +313,7 @@ namespace tao
             template< typename Input >
             static void apply( const Input& in, state& st )
             {
-               pegtl::file_input i2( st.temp.get_string() );
-               st.temp.discard();
+               pegtl::file_input i2( st.str );
                pegtl::parse_nested< grammar, action, control >( in, i2, st );
             }
          };

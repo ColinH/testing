@@ -6,6 +6,7 @@
 #include "value.hpp"
 
 #include "internal/parse_file.hpp"
+#include "internal/phase2.hpp"
 
 namespace tao
 {

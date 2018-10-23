@@ -3,9 +3,10 @@
 #ifndef TAO_CONFIG_INTERNAL_CONTROL_HPP
 #define TAO_CONFIG_INTERNAL_CONTROL_HPP
 
+#include "grammar.hpp"
 #include "pegtl.hpp"
-#include "resolve.hpp"
-#include "utility.hpp"
+#include "state.hpp"
+#include "value.hpp"
 
 namespace tao
 {
@@ -19,35 +20,6 @@ namespace tao
          {
          };
 
-         template< typename Rule >
-         struct key_control
-            : public pegtl::normal< Rule >
-         {
-            template< typename Input >
-            static void start( const Input&, state& st )
-            {
-               st.keys.push_back( pointer() );
-            }
-
-            template< typename Input >
-            static void failure( const Input&, state& st )
-            {
-               st.keys.pop_back();
-            }
-         };
-
-         template<>
-         struct control< rules::phase1_key >
-            : public key_control< rules::phase1_key >
-         {
-         };
-
-         template<>
-         struct control< rules::member_key >
-            : public key_control< rules::member_key >
-         {
-         };
-
          template<>
          struct control< rules::phase2_key >
             : public pegtl::normal< rules::phase2_key >
@@ -55,20 +27,22 @@ namespace tao
             template< typename Input >
             static void start( const Input&, state& st )
             {
-               assert( !st.stack.empty() );
-               assert( st.stack.back()->t );
-               assert( st.stack.back()->is_array() );
+               assert( !st.lstack.empty() );
 
-               st.stack.emplace_back( &st.stack.back()->emplace_back( json::empty_array ) );
-               st.stack.back()->t = annotation::REFERENCE;
+               if( st.rstack.empty() ) {
+                  st.rstack.emplace_back( &st.lstack.back()->emplace_back( entry::indirect( json::empty_array ) ).get_indirect() );
+               }
+               else {
+                  st.rstack.emplace_back( &st.rstack.back()->emplace_back( json::empty_array ) );
+               }
             }
 
             template< typename Input >
             static void success( const Input&, state& st )
             {
-               assert( st.stack.size() > 1 );
+               assert( !st.rstack.empty() );
 
-               st.stack.pop_back();
+               st.rstack.pop_back();
             }
          };
 
@@ -79,12 +53,62 @@ namespace tao
             template< typename Input >
             static void start( const Input&, state& st )
             {
-               assert( !st.stack.empty() );
-               assert( !st.stack.back()->t );
-               assert( st.stack.back()->type() == json::type::ARRAY );
+               assert( st.rstack.empty() );
+               assert( !st.astack.empty() );
 
-               st.stack.emplace_back( &st.stack.back()->emplace_back( json::empty_array ) );
-               st.stack.back()->t = annotation::ADDITION;
+               st.lstack.emplace_back( &st.astack.back()->emplace_back() );
+            }
+
+            template< typename Input >
+            static void success( const Input&, state& st )
+            {
+               assert( st.rstack.empty() );
+               assert( !st.astack.empty() );
+               assert( !st.lstack.empty() );
+
+               st.lstack.pop_back();
+            }
+         };
+
+         template<>
+         struct control< rules::element_list >
+            : public pegtl::normal< rules::element_list >
+         {
+            template< typename Input >
+            static void start( const Input&, state& st )
+            {
+               assert( !st.lstack.empty() );
+
+               st.astack.emplace_back( &st.lstack.back()->emplace_back( entry::array() ).get_array() );
+            }
+
+            template< typename Input >
+            static void success( const Input&, state& st )
+            {
+               assert( !st.astack.empty() );
+
+               st.astack.pop_back();
+            }
+         };
+
+         template<>
+         struct control< rules::member_list >
+            : public pegtl::normal< rules::member_list >
+         {
+            template< typename Input >
+            static void start( const Input&, state& st )
+            {
+               assert( !st.lstack.empty() );
+
+               st.ostack.emplace_back( &st.lstack.back()->emplace_back( entry::object() ).get_object() );
+            }
+
+            template< typename Input >
+            static void success( const Input&, state& st )
+            {
+               assert( !st.ostack.empty() );
+
+               st.ostack.pop_back();
             }
          };
 

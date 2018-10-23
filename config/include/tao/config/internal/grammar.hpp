@@ -53,17 +53,15 @@ namespace tao
             struct parse_s : pegtl::string< 'p', 'a', 'r', 's', 'e' > {};
             struct shell_s : pegtl::string< 's', 'h', 'e', 'l', 'l' > {};
 
+            struct erase_s : pegtl::string< 'd', 'e', 'l', 'e', 't', 'e' > {};
             struct stderr_s : pegtl::string< 's', 't', 'd', 'e', 'r', 'r' > {};
-            struct delete_s : pegtl::string< 'd', 'e', 'l', 'e', 't', 'e' > {};
             struct include_s : pegtl::string< 'i', 'n', 'c', 'l', 'u', 'd', 'e' > {};
 
             struct identifier : pegtl::identifier {};  // TODO: More?
 
             struct array;
             struct object;
-            struct reference;
-            struct value_list;
-            struct value_part;
+            struct phase2_key;
 
             struct opt_comma : pegtl::opt< comma, wss > {};
 
@@ -73,17 +71,16 @@ namespace tao
             struct phase1_append : minus {};
             struct phase1_part : pegtl::sor< phase1_name, phase1_index, phase1_multi, phase1_append > {};
 
+            struct phase2_sub : pegtl::if_must< round_a, phase2_key, round_z > {};
             struct phase2_name : identifier {};
             struct phase2_index : pegtl::plus< pegtl::digit > {};
-            struct phase2_part : pegtl::sor< reference, phase2_name, phase2_index > {};
+            struct phase2_part : pegtl::sor< phase2_sub, phase2_name, phase2_index > {};
 
             struct phase1_key : pegtl::list_must< phase1_part, dot > {};
             struct member_key : pegtl::seq< phase1_name, pegtl::star_must< dot, phase1_part > > {};
             struct phase2_key : pegtl::list_must< phase2_part, dot > {};
 
-            struct reference : pegtl::if_must< round_a, phase2_key, round_z > {};
-
-            struct phase1_content : pegtl::star< pegtl::not_one< '"' > > {};  // TODO: Concatenation?
+            struct phase1_content : pegtl::star< pegtl::not_one< '"' > > {};  // TODO: ...
             struct phase1_string : pegtl::if_must< quote_2, phase1_content, quote_2 > {};
 
             struct env_value : pegtl::if_must< env_s, wsp, phase1_string > {};
@@ -98,7 +95,8 @@ namespace tao
             struct if_at : pegtl::at< identifier, wsp > {};  // TODO: Enough?
             struct special_value : pegtl::if_must< round_a, pegtl::if_must_else< if_at, ext_value, phase2_key >, round_z > {};
 
-            struct string_value : phase1_string {};  // TODO...
+            struct string_content : pegtl::star< pegtl::not_one< '"' > > {};  // TODO: ...
+            struct string_value : pegtl::if_must< quote_2, phase1_content, quote_2 > {};
             struct number_value : pegtl::plus< pegtl::digit > {};
 
             struct value_part : pegtl::sor< null_s, true_s, false_s, array, object, special_value, string_value, number_value > {};  // TODO: All the rest (binary, proper strings, proper numbers).
@@ -108,10 +106,10 @@ namespace tao
             struct append_member : pegtl::if_must< plus_equals, wss, value_list > {};
             struct key_member : pegtl::if_must< member_key, wss, pegtl::sor< assign_member, append_member > > {};
 
+            struct erase_member : pegtl::if_must< erase_s, wsp, phase1_key > {};
             struct stderr_member: pegtl::if_must< stderr_s, wsp, phase1_key > {};
-            struct delete_member : pegtl::if_must< delete_s, wsp, phase1_key > {};
             struct include_member : pegtl::if_must< include_s, wsp, phase1_string > {};
-            struct ext_member : pegtl::if_must< round_a, pegtl::sor< include_member, delete_member, stderr_member >, round_z > {};
+            struct ext_member : pegtl::if_must< round_a, pegtl::sor< erase_member, stderr_member, include_member >, round_z > {};
 
             struct element : value_list {};
             struct member : pegtl::sor< ext_member, key_member > {};
