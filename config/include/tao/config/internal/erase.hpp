@@ -100,10 +100,9 @@ namespace tao
                const auto j = i.get_object().find( k );
 
                if( j != i.get_object().end() ) {
-                  return erase( j->second, p, f );
+                  erase( j->second, p, f );
                }
             }
-            throw std::runtime_error( std::string( __FILE__ ) + ":" + std::to_string( __LINE__ ) );  // TODO: Proper exception messages everywhere.
          }
 
          inline void erase_index( list_t& l, std::size_t n, const pointer& p, const token& f )
