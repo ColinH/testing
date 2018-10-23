@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "pegtl.hpp"
 #include "json.hpp"
 
 namespace tao
@@ -58,26 +59,16 @@ namespace tao
          class entry
          {
          public:
-            entry()
-               : m_type( internal::type::NOTHING )
-            {
-            }
-
-            explicit
-            entry( const type t )
-               : m_type( t )
-            {
-               init();
-            }
-
             entry( entry&& r ) noexcept
-               : m_type( r.m_type )
+               : m_type( r.m_type ),
+                 m_position( std::move( r.m_position ) )
             {
                seize( std::move( r ) );
             }
 
             entry( const entry& r )
-               : m_type( internal::type::NOTHING )
+               : m_type( internal::type::NOTHING ),
+                 m_position( r.m_position )
             {
                embed( r );
                m_type = r.m_type;
@@ -88,6 +79,7 @@ namespace tao
                discard();
                seize( std::move( r ) );
                m_type = r.m_type;
+               m_position = std::move( r.m_position );
             }
 
             ~entry() noexcept
@@ -137,67 +129,64 @@ namespace tao
                discard();
             }
 
-            template< typename... Ts >
-            void set_atom( Ts&&... ts )
+            template< typename T >
+            void set_atom( T&& t )
             {
                discard();
-               new( &m_union.v ) atom_t( std::forward< Ts >( ts )... );
+               new( &m_union.v ) atom_t( std::forward< T >( t ) );
                m_type = internal::type::ATOM;
             }
 
-            template< typename... Ts >
-            void set_array( Ts&&... ts )
+            void set_array()
             {
                discard();
-               new( &m_union.a ) array_t( std::forward< Ts >( ts )... );
+               new( &m_union.a ) array_t();
                m_type = internal::type::ARRAY;
             }
 
-            template< typename... Ts >
-            void set_object( Ts&&... ts )
+            void set_object()
             {
                discard();
-               new( &m_union.o ) object_t( std::forward< Ts >( ts )... );
+               new( &m_union.o ) object_t();
                m_type = internal::type::OBJECT;
             }
 
-            template< typename... Ts >
-            void set_indirect( Ts&&... ts )
+            void set_indirect()
             {
                discard();
-               new( &m_union.i ) indirect_t( std::forward< Ts >( ts )... );
+               new( &m_union.i ) indirect_t( json::empty_array );
                m_type = internal::type::INDIRECT;
             }
 
-            template< typename... Ts >
-            static entry atom( Ts&&... ts )
+            template< typename Input, typename T >
+            static entry atom( const Input& in, T&& t )
             {
-               entry r;
-               r.set_atom( std::forward< Ts >( ts )... );
+               entry r( in );
+               r.set_atom( std::forward< T >( t ) );
                return r;
             }
 
-            template< typename... Ts >
-            static entry array( Ts&&... ts )
+            template< typename Input >
+            static entry array( const Input& in )
             {
-               entry r;
-               r.set_array( std::forward< Ts >( ts )... );
+               entry r( in );
+               r.set_array();
                return r;
             }
 
-            template< typename... Ts >
-            static entry object( Ts&&... ts )
+            template< typename Input >
+            static entry object( const Input& in )
             {
-               entry r;
-               r.set_object( std::forward< Ts >( ts )... );
+               entry r( in );
+               r.set_object();
                return r;
             }
 
-            template< typename... Ts >
-            static entry indirect( Ts&&... ts )
+            template< typename Input >
+            static entry indirect( const Input& in )
             {
-               entry r;
-               r.set_indirect( std::forward< Ts >( ts )... );
+               entry r( in );
+               r.set_indirect();
                return r;
             }
 
@@ -263,24 +252,12 @@ namespace tao
             }
 
          private:
-            void init()
+            template< typename Input >
+            explicit
+            entry( const Input& in )
+               : m_type( internal::type::NOTHING ),
+                 m_position( in.position() )
             {
-               switch( m_type ) {
-                  case internal::type::ATOM:
-                     new( &m_union.v ) atom_t();
-                     break;
-                  case internal::type::ARRAY:
-                     new( &m_union.a ) array_t();
-                     break;
-                  case internal::type::OBJECT:
-                     new( &m_union.o ) object_t();
-                     break;
-                  case internal::type::NOTHING:
-                     break;
-                  case internal::type::INDIRECT:
-                     new( &m_union.i ) indirect_t();
-                     break;
-               }
             }
 
             void discard() noexcept
@@ -348,6 +325,7 @@ namespace tao
             mutable bool m_phase2_recursion_marker = false;
             internal::type m_type;
             entry_union m_union;
+            pegtl::position m_position;
          };
 
       }  // namespace internal

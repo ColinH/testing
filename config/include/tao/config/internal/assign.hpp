@@ -15,9 +15,11 @@ namespace tao
    {
       namespace internal
       {
-         inline list_t& assign( list_t& l, const pointer& p );
+         template< typename Input >
+         list_t& assign( const Input& in, list_t& l, const pointer& p );
 
-         inline list_t& assign_name( list_t& l, const std::string& k, const pointer& p )
+         template< typename Input >
+         list_t& assign_name( const Input& in, list_t& l, const std::string& k, const pointer& p )
          {
             for( auto& i : reverse( l ) ) {
                if( !i.is_object() ) {
@@ -26,16 +28,17 @@ namespace tao
                const auto j = i.get_object().find( k );
 
                if( j != i.get_object().end() ) {
-                  return assign( j->second, p );
+                  return assign( in, j->second, p );
                }
             }
             if( l.empty() ) {
-               l.emplace_back( entry::object() );
+               l.emplace_back( entry::object( in ) );
             }
-            return assign( l.back().get_object()[ k ], p );
+            return assign( in, l.back().get_object()[ k ], p );
          }
 
-         inline list_t& assign_index( list_t& l, std::size_t n, const pointer& p )
+         template< typename Input >
+         list_t& assign_index( const Input& in, list_t& l, std::size_t n, const pointer& p )
          {
             for( auto& i : l ) {
                if( !i.is_array() ) {
@@ -44,49 +47,53 @@ namespace tao
                const auto s = i.get_array().size();
 
                if( n < s ) {
-                  return assign( i.get_array()[ n ], p );
+                  return assign( in, i.get_array()[ n ], p );
                }
                n -= s;
             }
             throw std::runtime_error( std::string( __FILE__ ) + ":" + std::to_string( __LINE__ ) );
          }
 
-         inline list_t& assign_minus( list_t& l, const pointer& p )
+         template< typename Input >
+         list_t& assign_minus( const Input& in, list_t& l, const pointer& p )
          {
             if( l.empty() ) {
-               l.emplace_back( entry::array() );
+               l.emplace_back( entry::array( in ) );
             }
-            return assign( l.back().get_array().emplace_back(), p );
+            return assign( in, l.back().get_array().emplace_back(), p );
          }
 
-         inline list_t& assign( list_t& l, const token& t, const pointer& p )
+         template< typename Input >
+         list_t& assign( const Input& in, list_t& l, const token& t, const pointer& p )
          {
             switch( t.t ) {
                case token::NAME:
-                  return assign_name( l, t.k, p );
+                  return assign_name( in, l, t.k, p );
                case token::INDEX:
-                  return assign_index( l, t.i, p );
+                  return assign_index( in, l, t.i, p );
                case token::STAR:
                   throw std::runtime_error( std::string( __FILE__ ) + ":" + std::to_string( __LINE__ ) );
                case token::MINUS:
-                  return assign_minus( l, p );
+                  return assign_minus( in, l, p );
             }
             assert( false );
          }
 
-         inline list_t& assign( list_t& l, const pointer& p )
+         template< typename Input >
+         list_t& assign( const Input& in, list_t& l, const pointer& p )
          {
             if( p.empty() ) {
                return l;
             }
-            return assign( l, p.front(), pop_front( p ) );
+            return assign( in, l, p.front(), pop_front( p ) );
          }
 
-         inline list_t& assign( object_t& o, const token& t, const pointer& p )
+         template< typename Input >
+         list_t& assign( const Input& in, object_t& o, const token& t, const pointer& p )
          {
             switch( t.t ) {
                case token::NAME:
-                  return assign( o[ t.k ], p );
+                  return assign( in, o[ t.k ], p );
                case token::INDEX:
                   throw std::runtime_error( std::string( __FILE__ ) + ":" + std::to_string( __LINE__ ) );
                case token::STAR:
@@ -97,11 +104,12 @@ namespace tao
             assert( false );
          }
 
-         inline list_t& assign( object_t& o, const pointer& p )
+         template< typename Input >
+         list_t& assign( const Input& in, object_t& o, const pointer& p )
          {
             assert( !p.empty() );
 
-            return assign( o, p.front(), pop_front( p ) );
+            return assign( in, o, p.front(), pop_front( p ) );
          }
 
       }  // namespace internal

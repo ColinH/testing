@@ -32,11 +32,11 @@ namespace tao
          struct action< rules::null_s >
          {
             template< typename Input >
-            static void apply( const Input&, state& st )
+            static void apply( const Input& in, state& st )
             {
                assert( !st.lstack.empty() );
 
-               st.lstack.back()->emplace_back( entry::atom( json::null ) );
+               st.lstack.back()->emplace_back( entry::atom( in, json::null ) );
             }
          };
 
@@ -44,11 +44,11 @@ namespace tao
          struct action< rules::true_s >
          {
             template< typename Input >
-            static void apply( const Input&, state& st )
+            static void apply( const Input& in, state& st )
             {
                assert( !st.lstack.empty() );
 
-               st.lstack.back()->emplace_back( entry::atom( true ) );
+               st.lstack.back()->emplace_back( entry::atom( in, true ) );
             }
          };
 
@@ -56,11 +56,11 @@ namespace tao
          struct action< rules::false_s >
          {
             template< typename Input >
-            static void apply( const Input&, state& st )
+            static void apply( const Input& in, state& st )
             {
                assert( !st.lstack.empty() );
 
-               st.lstack.back()->emplace_back( entry::atom( false ) );
+               st.lstack.back()->emplace_back( entry::atom( in, false ) );
             }
          };
 
@@ -72,7 +72,7 @@ namespace tao
             {
                assert( !st.lstack.empty() );
 
-               st.lstack.back()->emplace_back( entry::atom( in.string() ) );  // TODO: Escaping...
+               st.lstack.back()->emplace_back( entry::atom( in, in.string() ) );  // TODO: Escaping...
             }
          };
 
@@ -84,98 +84,106 @@ namespace tao
             {
                assert( !st.lstack.empty() );
 
-               st.lstack.back()->emplace_back( entry::atom( std::stoul( in.string() ) ) );
+               st.lstack.back()->emplace_back( entry::atom( in, std::stoul( in.string() ) ) );
             }
          };
 
          template<>
          struct action< rules::env_value >
          {
-            static void apply0( state& st )
+            template< typename Input >
+            static void apply( const Input& in, state& st )
             {
                assert( !st.lstack.empty() );
 
-               st.lstack.back()->emplace_back( entry::atom( get_env( st.str ) ) );
+               st.lstack.back()->emplace_back( entry::atom( in, get_env( st.str ) ) );
             }
          };
 
          template<>
          struct action< rules::read_value >
          {
-            static void apply0( state& st )
+            template< typename Input >
+            static void apply( const Input& in, state& st )
             {
                assert( !st.lstack.empty() );
 
-               st.lstack.back()->emplace_back( entry::atom( read_file( st.str ) ) );
+               st.lstack.back()->emplace_back( entry::atom( in, read_file( st.str ) ) );
             }
          };
 
          template<>
          struct action< rules::json_value >
          {
-            static void apply0( state& st )
+            template< typename Input >
+            static void apply( const Input& in, state& st )
             {
                assert( !st.lstack.empty() );
 
-               st.lstack.back()->emplace_back( entry::atom( json::parse_file( st.str ) ) );
+               st.lstack.back()->emplace_back( entry::atom( in, json::parse_file( st.str ) ) );
             }
          };
 
          template<>
          struct action< rules::jaxn_value >
          {
-            static void apply0( state& st )
+            template< typename Input >
+            static void apply( const Input& in, state& st )
             {
                assert( !st.lstack.empty() );
 
-               st.lstack.back()->emplace_back( entry::atom( json::jaxn::parse_file( st.str ) ) );
+               st.lstack.back()->emplace_back( entry::atom( in, json::jaxn::parse_file( st.str ) ) );
             }
          };
 
          template<>
          struct action< rules::cbor_value >
          {
-            static void apply0( state& st )
+            template< typename Input >
+            static void apply( const Input& in, state& st )
             {
                assert( !st.lstack.empty() );
 
-               st.lstack.back()->emplace_back( entry::atom( json::cbor::parse_file( st.str ) ) );
+               st.lstack.back()->emplace_back( entry::atom( in, json::cbor::parse_file( st.str ) ) );
             }
          };
 
          template<>
          struct action< rules::msgpack_value >
          {
-            static void apply0( state& st )
+            template< typename Input >
+            static void apply( const Input& in, state& st )
             {
                assert( !st.lstack.empty() );
 
-               st.lstack.back()->emplace_back( entry::atom( json::msgpack::parse_file( st.str ) ) );
+               st.lstack.back()->emplace_back( entry::atom( in, json::msgpack::parse_file( st.str ) ) );
             }
          };
 
          template<>
          struct action< rules::ubjson_value >
          {
-            static void apply0( state& st )
+            template< typename Input >
+            static void apply( const Input& in, state& st )
             {
                assert( !st.lstack.empty() );
 
-               st.lstack.back()->emplace_back( entry::atom( json::ubjson::parse_file( st.str ) ) );
+               st.lstack.back()->emplace_back( entry::atom( in, json::ubjson::parse_file( st.str ) ) );
             }
          };
 
          template<>
          struct action< rules::debug_value >
          {
-            static void apply0( state& st )
+            template< typename Input >
+            static void apply( const Input& in, state& st )
             {
                assert( !st.ostack.empty() );
                assert( !st.lstack.empty() );
 
                std::ostringstream oss;
                to_stream( oss, access( *st.ostack.back(), st.key ) );
-               st.lstack.back()->emplace_back( entry::atom( oss.str() ) );
+               st.lstack.back()->emplace_back( entry::atom( in, oss.str() ) );
 
                st.key.clear();
             }
@@ -298,11 +306,12 @@ namespace tao
          template<>
          struct action< rules::equals >
          {
-            static void apply0( state& st )
+            template< typename Input >
+            static void apply( const Input& in, state& st )
             {
                assert( !st.ostack.empty() );
 
-               st.lstack.emplace_back( &assign( *st.ostack.back(), st.key ) );
+               st.lstack.emplace_back( &assign( in, *st.ostack.back(), st.key ) );
                st.lstack.back()->clear();
 
                st.key.clear();
@@ -312,11 +321,12 @@ namespace tao
          template<>
          struct action< rules::plus_equals >
          {
-            static void apply0( state& st )
+            template< typename Input >
+            static void apply( const Input& in, state& st )
             {
                assert( !st.ostack.empty() );
 
-               st.lstack.emplace_back( &assign( *st.ostack.back(), st.key ) );
+               st.lstack.emplace_back( &assign( in, *st.ostack.back(), st.key ) );
 
                st.key.clear();
             }
