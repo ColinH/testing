@@ -10,6 +10,7 @@
 #include "control.hpp"
 #include "erase.hpp"
 #include "grammar.hpp"
+#include "json.hpp"
 #include "pegtl.hpp"
 #include "state.hpp"
 #include "system.hpp"
@@ -106,6 +107,61 @@ namespace tao
                assert( !st.lstack.empty() );
 
                st.lstack.back()->emplace_back( entry::atom( read_file( st.str ) ) );
+            }
+         };
+
+         template<>
+         struct action< rules::json_value >
+         {
+            static void apply0( state& st )
+            {
+               assert( !st.lstack.empty() );
+
+               st.lstack.back()->emplace_back( entry::atom( json::parse_file( st.str ) ) );
+            }
+         };
+
+         template<>
+         struct action< rules::jaxn_value >
+         {
+            static void apply0( state& st )
+            {
+               assert( !st.lstack.empty() );
+
+               st.lstack.back()->emplace_back( entry::atom( json::jaxn::parse_file( st.str ) ) );
+            }
+         };
+
+         template<>
+         struct action< rules::cbor_value >
+         {
+            static void apply0( state& st )
+            {
+               assert( !st.lstack.empty() );
+
+               st.lstack.back()->emplace_back( entry::atom( json::cbor::parse_file( st.str ) ) );
+            }
+         };
+
+         template<>
+         struct action< rules::msgpack_value >
+         {
+            static void apply0( state& st )
+            {
+               assert( !st.lstack.empty() );
+
+               st.lstack.back()->emplace_back( entry::atom( json::msgpack::parse_file( st.str ) ) );
+            }
+         };
+
+         template<>
+         struct action< rules::ubjson_value >
+         {
+            static void apply0( state& st )
+            {
+               assert( !st.lstack.empty() );
+
+               st.lstack.back()->emplace_back( entry::atom( json::ubjson::parse_file( st.str ) ) );
             }
          };
 

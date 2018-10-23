@@ -48,10 +48,16 @@ namespace tao
 
             struct env_s : pegtl::string< 'e', 'n', 'v' > {};
             struct copy_s : pegtl::string< 'c', 'o', 'p', 'y' > {};
-            struct read_s : pegtl::string< 'r', 'e', 'a', 'd' > {};
             struct debug_s : pegtl::string< 'd', 'e', 'b', 'u', 'g' > {};
             struct parse_s : pegtl::string< 'p', 'a', 'r', 's', 'e' > {};
             struct shell_s : pegtl::string< 's', 'h', 'e', 'l', 'l' > {};
+
+            struct read_s : pegtl::string< 'r', 'e', 'a', 'd' > {};
+            struct json_s : pegtl::string< 'j', 's', 'o', 'n' > {};
+            struct jaxn_s : pegtl::string< 'j', 'a', 'x', 'n' > {};
+            struct cbor_s : pegtl::string< 'c', 'b', 'o', 'r' > {};
+            struct msgpack_s : pegtl::string< 'm', 's', 'g', 'p', 'a', 'c', 'k' > {};
+            struct ubjson_s : pegtl::string< 'u', 'b', 'j', 's', 'o', 'n' > {};
 
             struct erase_s : pegtl::string< 'd', 'e', 'l', 'e', 't', 'e' > {};
             struct stderr_s : pegtl::string< 's', 't', 'd', 'e', 'r', 'r' > {};
@@ -85,12 +91,18 @@ namespace tao
 
             struct env_value : pegtl::if_must< env_s, wsp, phase1_string > {};
             struct copy_value : pegtl::if_must< copy_s, wsp, phase1_key > {};
-            struct read_value : pegtl::if_must< read_s, wsp, phase1_string > {};
             struct debug_value : pegtl::if_must< debug_s, wsp, phase1_key > {};
             struct parse_value : pegtl::if_must< parse_s, wsp, phase1_string > {};
             struct shell_value : pegtl::if_must< shell_s, wsp, phase1_string > {};
 
-            struct ext_value : pegtl::sor< env_value, copy_value, read_value, debug_value, shell_value > {};  // TODO: Keep this all here, or unify syntax and delegate to a run-time map later?
+            struct read_value : pegtl::if_must< read_s, wsp, phase1_string > {};
+            struct json_value : pegtl::if_must< json_s, wsp, phase1_string > {};
+            struct jaxn_value : pegtl::if_must< jaxn_s, wsp, phase1_string > {};
+            struct cbor_value : pegtl::if_must< cbor_s, wsp, phase1_string > {};
+            struct msgpack_value : pegtl::if_must< msgpack_s, wsp, phase1_string > {};
+            struct ubjson_value : pegtl::if_must< ubjson_s, wsp, phase1_string > {};
+
+            struct ext_value : pegtl::sor< env_value, copy_value, shell_value, debug_value, read_value, json_value, jaxn_value, cbor_value, msgpack_value, ubjson_value > {};  // TODO: Keep this all here, or unify syntax and delegate to a run-time map later?
 
             struct if_at : pegtl::at< identifier, wsp > {};  // TODO: Enough?
             struct special_value : pegtl::if_must< round_a, pegtl::if_must_else< if_at, ext_value, phase2_key >, round_z > {};
