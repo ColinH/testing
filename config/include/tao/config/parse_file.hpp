@@ -3,10 +3,10 @@
 #ifndef TAO_CONFIG_PARSE_FILE_HPP
 #define TAO_CONFIG_PARSE_FILE_HPP
 
-#include "value.hpp"
-
 #include "internal/parse_file.hpp"
 #include "internal/phase2.hpp"
+
+#include "value.hpp"
 
 namespace tao
 {

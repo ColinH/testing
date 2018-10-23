@@ -108,7 +108,7 @@ namespace tao
             struct special_value : pegtl::if_must< round_a, pegtl::if_must_else< if_at, ext_value, phase2_key >, round_z > {};
 
             struct string_content : pegtl::star< pegtl::not_one< '"' > > {};  // TODO: ...
-            struct string_value : pegtl::if_must< quote_2, phase1_content, quote_2 > {};
+            struct string_value : pegtl::if_must< quote_2, string_content, quote_2 > {};
             struct number_value : pegtl::plus< pegtl::digit > {};
 
             struct value_part : pegtl::sor< null_s, true_s, false_s, array, object, special_value, string_value, number_value > {};  // TODO: All the rest (binary, proper strings, proper numbers).

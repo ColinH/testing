@@ -15,11 +15,11 @@ namespace tao
    {
       namespace internal
       {
-         inline list_t& access( list_t& l, const pointer& p );
+         inline const list_t& access( const list_t& l, const pointer& p );
 
-         inline list_t& access_name( list_t& l, const std::string& k, const pointer& p )
+         inline const list_t& access_name( const list_t& l, const std::string& k, const pointer& p )
          {
-            for( auto& i : reverse( l ) ) {
+            for( const auto& i : reverse( l ) ) {
                if( !i.is_object() ) {
                   throw std::runtime_error( std::string( __FILE__ ) + ":" + std::to_string( __LINE__ ) );
                }
@@ -32,9 +32,9 @@ namespace tao
             throw std::runtime_error( std::string( __FILE__ ) + ":" + std::to_string( __LINE__ ) );
          }
 
-         inline list_t& access_index( list_t& l, std::size_t n, const pointer& p )
+         inline const list_t& access_index( const list_t& l, std::size_t n, const pointer& p )
          {
-            for( auto& i : l ) {
+            for( const auto& i : l ) {
                if( !i.is_array() ) {
                   throw std::runtime_error( std::string( __FILE__ ) + ":" + std::to_string( __LINE__ ) );
                }
@@ -48,9 +48,9 @@ namespace tao
             throw std::runtime_error( std::string( __FILE__ ) + ":" + std::to_string( __LINE__ ) );
          }
 
-         inline list_t& access_minus( list_t& l, const pointer& p )
+         inline const list_t& access_minus( const list_t& l, const pointer& p )
          {
-            for( auto& i : reverse( l ) ) {
+            for( const auto& i : reverse( l ) ) {
                if( !i.is_array() ) {
                   throw std::runtime_error( std::string( __FILE__ ) + ":" + std::to_string( __LINE__ ) );
                }
@@ -61,7 +61,7 @@ namespace tao
             throw std::runtime_error( std::string( __FILE__ ) + ":" + std::to_string( __LINE__ ) );
          }
 
-         inline list_t& access( list_t& l, const token& t, const pointer& p )
+         inline const list_t& access( const list_t& l, const token& t, const pointer& p )
          {
             switch( t.t ) {
                case token::NAME:
@@ -76,7 +76,7 @@ namespace tao
             assert( false );
          }
 
-         inline list_t& access( list_t& l, const pointer& p )
+         inline const list_t& access( const list_t& l, const pointer& p )
          {
             if( p.empty() ) {
                return l;
@@ -84,7 +84,7 @@ namespace tao
             return access( l, p.front(), pop_front( p ) );
          }
 
-         inline list_t& access( object_t& o, const token& t, const pointer& p )
+         inline const list_t& access( const object_t& o, const token& t, const pointer& p )
          {
             switch( t.t ) {
                case token::NAME:
@@ -99,7 +99,7 @@ namespace tao
             assert( false );
          }
 
-         inline list_t& access( object_t& o, const pointer& p )
+         inline const list_t& access( const object_t& o, const pointer& p )
          {
             assert( !p.empty() );
 

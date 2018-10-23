@@ -191,11 +191,11 @@ namespace tao
             }
          }
 
-         template< template< typename... > class Traits >
-         json::basic_value< Traits > value_addition( const json::basic_value< Traits >& v )
-         {
-            return value_addition< Traits >( v.unsafe_get_array() );
-         }
+         // template< template< typename... > class Traits >
+         // json::basic_value< Traits > value_addition( const json::basic_value< Traits >& v )
+         // {
+         //    return value_addition< Traits >( v.unsafe_get_array() );
+         // }
 
       }  // namespace internal
 

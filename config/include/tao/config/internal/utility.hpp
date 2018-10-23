@@ -44,8 +44,37 @@ namespace tao
             Container& m_c;
          };
 
-         template< typename Container >
-         reverse( Container& )->reverse< Container >;
+         template< typename T >
+         reverse( T& )->reverse< T >;
+
+         template< typename T >
+         class phase2_guard
+         {
+         public:
+            explicit
+            phase2_guard( const T& v )
+               : m_v( v )
+            {
+               m_v.set_recursion_marker();
+            }
+
+            ~phase2_guard()
+            {
+               m_v.clear_recursion_marker();
+            }
+
+            phase2_guard( phase2_guard&& ) = delete;
+            phase2_guard( const phase2_guard& ) = delete;
+
+            void operator=( phase2_guard&& ) = delete;
+            void operator=( const phase2_guard& ) = delete;
+
+         private:
+            const T& m_v;
+         };
+
+         template< typename T >
+         phase2_guard( const T& )->phase2_guard< T >;
 
          inline token token_from_value( const json::value& v )
          {

@@ -5,6 +5,8 @@
 
 #include "value.hpp"
 
+#include "internal/events.hpp"
+
 namespace tao
 {
    namespace config

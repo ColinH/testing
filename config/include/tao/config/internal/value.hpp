@@ -4,6 +4,7 @@
 #define TAO_CONFIG_INTERNAL_VALUE_HPP
 
 #include <map>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -248,6 +249,19 @@ namespace tao
                return m_union.i;
             }
 
+            void set_recursion_marker() const
+            {
+               if( m_phase2_recursion_marker ) {
+                  throw std::runtime_error( std::string( __FILE__ ) + ":" + std::to_string( __LINE__ ) );  // TODO: Proper exception messages everywhere.
+               }
+               m_phase2_recursion_marker = true;
+            }
+
+            void clear_recursion_marker() const noexcept
+            {
+               m_phase2_recursion_marker = false;
+            }
+
          private:
             void init()
             {
@@ -331,6 +345,7 @@ namespace tao
                }
             }
 
+            mutable bool m_phase2_recursion_marker = false;
             internal::type m_type;
             entry_union m_union;
          };

@@ -103,7 +103,7 @@ namespace tao
                   return erase( j->second, p, f );
                }
             }
-            throw std::runtime_error( std::string( __FILE__ ) + ":" + std::to_string( __LINE__ ) );
+            throw std::runtime_error( std::string( __FILE__ ) + ":" + std::to_string( __LINE__ ) );  // TODO: Proper exception messages everywhere.
          }
 
          inline void erase_index( list_t& l, std::size_t n, const pointer& p, const token& f )
@@ -143,7 +143,7 @@ namespace tao
                case token::INDEX:
                   return erase_index( l, t.i, p, f );
                case token::STAR:
-                  throw std::runtime_error( std::string( __FILE__ ) + ":" + std::to_string( __LINE__ ) );  // TODO: Proper exception messages everywhere.
+                  throw std::runtime_error( std::string( __FILE__ ) + ":" + std::to_string( __LINE__ ) );  // TODO: Or implement this again?
                case token::MINUS:
                   return erase_minus( l, p, f );
             }

@@ -22,6 +22,12 @@ namespace tao
       if( c != j ) {
          ++failed;
          std::cerr << "Testcase '" << name << "' failed!" << std::endl;
+         std::cerr << "<<< Parsed config <<<" << std::endl;
+         std::cerr << c << std::endl;
+         std::cerr << ">>> Parsed config >>>" << std::endl;
+         std::cerr << "<<< Reference data <<<" << std::endl;
+         std::cerr << j << std::endl;
+         std::cerr << ">>> Reference data >>>" << std::endl;
       }
    }
 

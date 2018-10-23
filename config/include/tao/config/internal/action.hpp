@@ -65,7 +65,7 @@ namespace tao
          };
 
          template<>
-         struct action< rules::string_value >
+         struct action< rules::string_content >
          {
             template< typename Input >
             static void apply( const Input& in, state& st )
