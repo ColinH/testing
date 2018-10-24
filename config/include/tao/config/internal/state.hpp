@@ -49,6 +49,14 @@ namespace tao
 
                lstack.back()->emplace_back( entry::atom( in, std::move( v ) ) );
             }
+
+            template< typename Input >
+            void string( const Input& in, std::string&& v )
+            {
+               assert( !lstack.empty() );
+
+               lstack.back()->emplace_back( entry::atom( in, std::move( v ) ) );
+            }
          };
 
       }  // namespace internal

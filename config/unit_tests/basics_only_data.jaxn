@@ -34,5 +34,7 @@
 
     f : "hallo",
 
-    binary : $deadbeef
+    binary : $deadbeef,
+
+    multi : "multi\nline\nstring\n"
 }

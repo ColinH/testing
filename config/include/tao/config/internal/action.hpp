@@ -65,18 +65,6 @@ namespace tao
          };
 
          template<>
-         struct action< rules::string_content >
-         {
-            template< typename Input >
-            static void apply( const Input& in, state& st )
-            {
-               assert( !st.lstack.empty() );
-
-               st.lstack.back()->emplace_back( entry::atom( in, in.string() ) );  // TODO: Escaping...
-            }
-         };
-
-         template<>
          struct action< rules::number_value >
          {
             template< typename Input >

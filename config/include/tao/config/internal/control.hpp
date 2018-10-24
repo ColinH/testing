@@ -9,6 +9,7 @@
 #include "json.hpp"
 #include "pegtl.hpp"
 #include "state.hpp"
+#include "string_state.hpp"
 #include "value.hpp"
 
 namespace tao
@@ -26,6 +27,12 @@ namespace tao
          template<>
          struct control< rules::binary_choice >
             : change_state_and_action< rules::binary_choice, binary_state, json::jaxn::internal::bunescape_action >
+         {
+         };
+
+         template<>
+         struct control< rules::string_choice >
+            : change_state_and_action< rules::string_choice, string_state, json::jaxn::internal::unescape_action >
          {
          };
 

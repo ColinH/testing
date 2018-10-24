@@ -33,7 +33,6 @@ namespace tao
             struct equals : pegtl::one< ':', '=' > {};
             struct plus_equals : pegtl::string< '+', '=' > {};
 
-            struct quote_1 : pegtl::one< '\'' > {};
             struct quote_2 : pegtl::one< '"' > {};
             struct curly_a : pegtl::one< '{' > {};
             struct curly_z : pegtl::one< '}' > {};
@@ -86,7 +85,7 @@ namespace tao
             struct member_key : pegtl::seq< phase1_name, pegtl::star_must< dot, phase1_part > > {};
             struct phase2_key : pegtl::list_must< phase2_part, dot > {};
 
-            struct phase1_content : pegtl::star< pegtl::not_one< '"' > > {};  // TODO: ...
+            struct phase1_content : pegtl::star< pegtl::not_one< '"' > > {};  // TODO: ?
             struct phase1_string : pegtl::if_must< quote_2, phase1_content, quote_2 > {};
 
             struct env_value : pegtl::if_must< env_s, wsp, phase1_string > {};
@@ -110,8 +109,10 @@ namespace tao
             struct binary_choice : pegtl::sor< jaxn::bstring, jaxn::bdirect > {};
             struct binary_value : pegtl::if_must< dollar, binary_choice > {};
 
-            struct string_content : pegtl::star< pegtl::not_one< '"' > > {};  // TODO: ...
-            struct string_value : pegtl::if_must< quote_2, string_content, quote_2 > {};
+            struct string_choice : jaxn::string_fragment {};
+            struct string_at : pegtl::at< pegtl::one< '\'', '"' > > {};
+            struct string_value : pegtl::if_must< string_at, string_choice > {};
+
             struct number_value : pegtl::plus< pegtl::digit > {};
 
             struct value_part : pegtl::sor< null_s, true_s, false_s, array, object, special_value, string_value, number_value, binary_value > {};  // TODO: All strings, all numbers.
