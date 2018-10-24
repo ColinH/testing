@@ -3,6 +3,8 @@
 #ifndef TAO_CONFIG_PARSE_FILE_HPP
 #define TAO_CONFIG_PARSE_FILE_HPP
 
+#include <string>
+
 #include "internal/parse_file.hpp"
 #include "internal/phase2.hpp"
 

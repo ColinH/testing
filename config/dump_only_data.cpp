@@ -4,10 +4,8 @@
 
 int main( int argc, char** argv )
 {
-   for( int i = 1; i < argc; ++i ) {
-      const auto v = tao::config::parse_file( argv[ i ] );
-      tao::json::jaxn::to_stream( std::cout, v, 3 );
-      std::cout << std::endl;
-   }
+   const tao::config::value v = tao::config::parse_files( std::vector< std::string >( argv + 1, argv + argc ) );
+   tao::json::jaxn::to_stream( std::cout, v, 3 );
+   std::cout << std::endl;
    return 0;
 }
