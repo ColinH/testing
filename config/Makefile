@@ -1,4 +1,3 @@
-CXX = g++-8
 CXXSTD = -std=c++17
 CPPFLAGS = -pedantic -I../../json/include -Iinclude
 CXXFLAGS = -Wall -Wextra -Werror -O3

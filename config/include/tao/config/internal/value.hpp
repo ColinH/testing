@@ -151,10 +151,10 @@ namespace tao
                m_type = internal::type::OBJECT;
             }
 
-            void set_indirect()
+            void set_indirect( json::value&& v )
             {
                discard();
-               new( &m_union.i ) indirect_t( json::empty_array );
+               new( &m_union.i ) indirect_t( std::move( v ) );
                m_type = internal::type::INDIRECT;
             }
 
@@ -183,10 +183,10 @@ namespace tao
             }
 
             template< typename Input >
-            static entry indirect( const Input& in )
+            static entry indirect( const Input& in, json::value&& v )
             {
                entry r( in );
-               r.set_indirect();
+               r.set_indirect( std::move( v ) );
                return r;
             }
 

@@ -266,32 +266,6 @@ namespace tao
          };
 
          template<>
-         struct action< rules::phase2_name >
-         {
-            template< typename Input >
-            static void apply( const Input& in, state& st )
-            {
-               assert( !st.rstack.empty() );
-               assert( st.rstack.back()->is_array() );
-
-               st.rstack.back()->emplace_back( in.string() );
-            }
-         };
-
-         template<>
-         struct action< rules::phase2_index >
-         {
-            template< typename Input >
-            static void apply( const Input& in, state& st )
-            {
-               assert( !st.rstack.empty() );
-               assert( st.rstack.back()->is_array() );
-
-               st.rstack.back()->emplace_back( std::stoul( in.string() ) );
-            }
-         };
-
-         template<>
          struct action< rules::equals >
          {
             template< typename Input >

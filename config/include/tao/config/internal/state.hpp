@@ -36,10 +36,6 @@ namespace tao
             pointer key;  // TODO: PEGTL switching-style?
             std::string str;  // TODO: PEGTL switching-style?
 
-            // Phase 2 References
-
-            std::vector< json::value* > rstack;  // TODO: PEGTL switching-style?
-
             // Switching-Style Support
 
             template< typename Input >
@@ -56,6 +52,14 @@ namespace tao
                assert( !lstack.empty() );
 
                lstack.back()->emplace_back( entry::atom( in, std::move( v ) ) );
+            }
+
+            template< typename Input >
+            void indirect( const Input& in, json::value&& v )
+            {
+               assert( !lstack.empty() );
+
+               lstack.back()->emplace_back( entry::indirect( in, std::move( v ) ) );
             }
          };
 

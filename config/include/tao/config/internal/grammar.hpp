@@ -84,6 +84,7 @@ namespace tao
             struct phase1_key : pegtl::list_must< phase1_part, dot > {};
             struct member_key : pegtl::seq< phase1_name, pegtl::star_must< dot, phase1_part > > {};
             struct phase2_key : pegtl::list_must< phase2_part, dot > {};
+            struct phase2_top : pegtl::list_must< phase2_part, dot > {};
 
             struct phase1_content : pegtl::star< pegtl::not_one< '"' > > {};  // TODO: ?
             struct phase1_string : pegtl::if_must< quote_2, phase1_content, quote_2 > {};
@@ -104,7 +105,7 @@ namespace tao
             struct ext_value : pegtl::sor< env_value, copy_value, shell_value, debug_value, read_value, json_value, jaxn_value, cbor_value, msgpack_value, ubjson_value > {};  // TODO: Keep this all here, or unify syntax and delegate to a run-time map later?
 
             struct if_at : pegtl::at< identifier, ws1 > {};  // TODO: Enough?
-            struct special_value : pegtl::if_must< round_a, pegtl::if_must_else< if_at, ext_value, phase2_key >, round_z > {};
+            struct special_value : pegtl::if_must< round_a, pegtl::if_must_else< if_at, ext_value, phase2_top >, round_z > {};
 
             struct binary_choice : pegtl::sor< jaxn::bstring, jaxn::bdirect > {};
             struct binary_value : pegtl::if_must< dollar, binary_choice > {};

@@ -8,6 +8,8 @@
 #include "grammar.hpp"
 #include "json.hpp"
 #include "pegtl.hpp"
+#include "phase2_action.hpp"
+#include "phase2_state.hpp"
 #include "state.hpp"
 #include "string_state.hpp"
 #include "value.hpp"
@@ -26,40 +28,20 @@ namespace tao
 
          template<>
          struct control< rules::binary_choice >
-            : change_state_and_action< rules::binary_choice, binary_state, json::jaxn::internal::bunescape_action >
+            : public change_state_and_action< rules::binary_choice, binary_state, json::jaxn::internal::bunescape_action >
          {
          };
 
          template<>
          struct control< rules::string_choice >
-            : change_state_and_action< rules::string_choice, string_state, json::jaxn::internal::unescape_action >
+            : public change_state_and_action< rules::string_choice, string_state, json::jaxn::internal::unescape_action >
          {
          };
 
          template<>
-         struct control< rules::phase2_key >
-            : public pegtl::normal< rules::phase2_key >
+         struct control< rules::phase2_top >
+            : public change_state_and_action< rules::phase2_top, phase2_state, phase2_action >
          {
-            template< typename Input >
-            static void start( const Input& in, state& st )
-            {
-               assert( !st.lstack.empty() );
-
-               if( st.rstack.empty() ) {
-                  st.rstack.emplace_back( &st.lstack.back()->emplace_back( entry::indirect( in ) ).get_indirect() );
-               }
-               else {
-                  st.rstack.emplace_back( &st.rstack.back()->emplace_back( json::empty_array ) );
-               }
-            }
-
-            template< typename Input >
-            static void success( const Input&, state& st )
-            {
-               assert( !st.rstack.empty() );
-
-               st.rstack.pop_back();
-            }
          };
 
          template<>
@@ -69,7 +51,6 @@ namespace tao
             template< typename Input >
             static void start( const Input&, state& st )
             {
-               assert( st.rstack.empty() );
                assert( !st.astack.empty() );
 
                st.lstack.emplace_back( &st.astack.back()->emplace_back() );
@@ -78,7 +59,6 @@ namespace tao
             template< typename Input >
             static void success( const Input&, state& st )
             {
-               assert( st.rstack.empty() );
                assert( !st.astack.empty() );
                assert( !st.lstack.empty() );
 

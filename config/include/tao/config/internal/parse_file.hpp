@@ -21,7 +21,6 @@ namespace tao
          inline void parse_file_impl( state& st, const std::string& filename )
          {
             assert( st.astack.empty() );
-            assert( st.rstack.empty() );
             assert( st.lstack.empty() );
             assert( st.ostack.size() == 1 );
 
@@ -29,7 +28,6 @@ namespace tao
             pegtl::parse< grammar, action, control >( in, st );
 
             assert( st.astack.empty() );
-            assert( st.rstack.empty() );
             assert( st.lstack.empty() );
             assert( st.ostack.size() == 1 );
          }

@@ -6,7 +6,7 @@
 
 #include <cstddef>
 #include <utility>
-#include <vector>
+#include <string>
 
 #include "pegtl.hpp"
 
