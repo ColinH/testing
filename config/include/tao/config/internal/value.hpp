@@ -251,6 +251,11 @@ namespace tao
                m_phase2_recursion_marker = false;
             }
 
+            const pegtl::position& position() const noexcept
+            {
+               return m_position;
+            }
+
          private:
             template< typename Input >
             explicit

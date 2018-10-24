@@ -23,10 +23,12 @@ namespace tao
          ++failed;
          std::cerr << "Testcase '" << name << "' failed!" << std::endl;
          std::cerr << "<<< Parsed config <<<" << std::endl;
-         std::cerr << c << std::endl;
+         json::jaxn::to_stream( std::cerr, c );
+         std::cerr << std::endl;
          std::cerr << ">>> Parsed config >>>" << std::endl;
          std::cerr << "<<< Reference data <<<" << std::endl;
-         std::cerr << j << std::endl;
+         json::jaxn::to_stream( std::cerr, j );
+         std::cerr << std::endl;
          std::cerr << ">>> Reference data >>>" << std::endl;
       }
    }

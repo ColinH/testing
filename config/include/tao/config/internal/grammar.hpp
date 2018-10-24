@@ -24,12 +24,12 @@ namespace tao
             struct wss : pegtl::star< ws1 > {};
             struct wsp : pegtl::plus< ws1 > {};
 
-            struct at : pegtl::one< '@' > {};  // Phase 1
             struct dot : pegtl::one< '.' > {};
             struct plus : pegtl::one< '+' > {};
             struct star : pegtl::one< '*' > {};
             struct minus : pegtl::one< '-' > {};
-            struct comma : pegtl::one< ',' > {};  // Optional
+            struct comma : pegtl::one< ',' > {};
+            struct dollar : pegtl::one< '$' > {};
             struct equals : pegtl::one< ':', '=' > {};
             struct plus_equals : pegtl::string< '+', '=' > {};
 
@@ -107,11 +107,14 @@ namespace tao
             struct if_at : pegtl::at< identifier, ws1 > {};  // TODO: Enough?
             struct special_value : pegtl::if_must< round_a, pegtl::if_must_else< if_at, ext_value, phase2_key >, round_z > {};
 
+            struct binary_choice : pegtl::sor< jaxn::bstring, jaxn::bdirect > {};
+            struct binary_value : pegtl::if_must< dollar, binary_choice > {};
+
             struct string_content : pegtl::star< pegtl::not_one< '"' > > {};  // TODO: ...
             struct string_value : pegtl::if_must< quote_2, string_content, quote_2 > {};
             struct number_value : pegtl::plus< pegtl::digit > {};
 
-            struct value_part : pegtl::sor< null_s, true_s, false_s, array, object, special_value, string_value, number_value > {};  // TODO: All the rest (binary, proper strings, proper numbers).
+            struct value_part : pegtl::sor< null_s, true_s, false_s, array, object, special_value, string_value, number_value, binary_value > {};  // TODO: All strings, all numbers.
 
             struct value_list : pegtl::list< value_part, plus, ws1 > {};
             struct assign_member : pegtl::if_must< equals, wss, value_list > {};

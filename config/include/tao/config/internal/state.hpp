@@ -39,6 +39,16 @@ namespace tao
             // Phase 2 References
 
             std::vector< json::value* > rstack;  // TODO: PEGTL switching-style?
+
+            // Switching-Style Support
+
+            template< typename Input >
+            void binary( const Input& in, std::vector< std::byte >&& v )
+            {
+               assert( !lstack.empty() );
+
+               lstack.back()->emplace_back( entry::atom( in, std::move( v ) ) );
+            }
          };
 
       }  // namespace internal

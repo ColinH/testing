@@ -3,7 +3,10 @@
 #ifndef TAO_CONFIG_INTERNAL_CONTROL_HPP
 #define TAO_CONFIG_INTERNAL_CONTROL_HPP
 
+#include "binary_state.hpp"
+#include "changes.hpp"
 #include "grammar.hpp"
+#include "json.hpp"
 #include "pegtl.hpp"
 #include "state.hpp"
 #include "value.hpp"
@@ -17,6 +20,12 @@ namespace tao
          template< typename Rule >
          struct control
             : public pegtl::normal< Rule >
+         {
+         };
+
+         template<>
+         struct control< rules::binary_choice >
+            : change_state_and_action< rules::binary_choice, binary_state, json::jaxn::internal::bunescape_action >
          {
          };
 
